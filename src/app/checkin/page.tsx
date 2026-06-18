@@ -8,7 +8,17 @@ import { NumberField, Segmented, Stepper, TextField } from "@/components/Inputs"
 import { useStore } from "@/lib/store";
 import { stepsToKm, walkingCalories, todayKey } from "@/lib/health";
 import { DEFAULT_FOODS } from "@/lib/foods";
-import type { FoodEntry, FoodLibraryItem, FoodSource } from "@/lib/types";
+import type { FoodEntry, FoodLibraryItem, FoodSource, MoodEntry } from "@/lib/types";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CloseIcon,
+  EditIcon,
+  CheckIcon,
+  SugarIcon,
+  PlusIcon,
+  MOODS,
+} from "@/components/icons";
 
 const SOURCE_META: Record<FoodSource, { label: string; tint: string }> = {
   home: { label: "Home", tint: "var(--green)" },
@@ -29,8 +39,18 @@ export default function CheckinPage() {
 }
 
 function Checkin() {
-  const { profile, dayLog, updateTodayLog, addWeight, selectedDate, setSelectedDate } =
-    useStore();
+  const {
+    profile,
+    dayLog,
+    updateTodayLog,
+    addWeight,
+    selectedDate,
+    setSelectedDate,
+    foodsToday,
+    moods,
+    addMood,
+    deleteMood,
+  } = useStore();
   const searchParams = useSearchParams();
   const [saved, setSaved] = useState(false);
 
@@ -66,11 +86,11 @@ function Checkin() {
     <div className="space-y-5">
       {/* smooth floating toast */}
       <div
-        className={`pointer-events-none fixed left-1/2 top-16 z-40 -translate-x-1/2 rounded-full border border-green/40 bg-green/15 px-4 py-1.5 text-xs font-semibold text-green backdrop-blur transition-all duration-300 ${
+        className={`pointer-events-none fixed left-1/2 top-16 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-green/40 bg-green/15 px-4 py-1.5 text-xs font-semibold text-green backdrop-blur transition-all duration-300 ${
           saved ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-0"
         }`}
       >
-        Saved ✓
+        <CheckIcon size={14} /> Saved
       </div>
 
       <DayNav date={selectedDate} onChange={setSelectedDate} />
@@ -143,6 +163,12 @@ function Checkin() {
 
       <FoodSection onSaved={flash} />
 
+      <SugarSection
+        sugarG={dayLog.sugar_g}
+        limit={profile.daily_sugar_limit_g}
+        sugarFoods={foodsToday.filter((f) => (f.sugar_g || 0) > 0)}
+      />
+
       <SpendSection />
 
       <Section
@@ -150,37 +176,31 @@ function Checkin() {
         tint="var(--accent-3)"
         delay={180}
         summary={
-          dayLog.weight_kg
-            ? `${dayLog.weight_kg} kg${dayLog.mood ? ` · feeling ${dayLog.mood}` : ""}`
-            : "No weigh-in yet — tap to add"
+          dayLog.weight_kg || moodsForDay(moods, selectedDate).length
+            ? `${dayLog.weight_kg ? `${dayLog.weight_kg} kg` : "no weigh-in"} · ${moodsForDay(moods, selectedDate).length} mood${moodsForDay(moods, selectedDate).length === 1 ? "" : "s"}`
+            : "No weigh-in or mood yet — tap to add"
         }
       >
         <WeightInput
           current={dayLog.weight_kg ?? profile.current_weight_kg}
           onSave={(kg) => addWeight(kg).then(flash)}
         />
-        <div>
-          <span className="field-label">Mood</span>
-          <Segmented
-            value={dayLog.mood ?? "ok"}
-            onChange={(m) => updateTodayLog({ mood: m }).then(flash)}
-            options={[
-              { value: "great", label: "🌟" },
-              { value: "ok", label: "🙂" },
-              { value: "tired", label: "😴" },
-              { value: "bad", label: "😩" },
-            ]}
-          />
-        </div>
-        <TextField
-          label="Notes"
-          value={dayLog.notes ?? ""}
-          onChange={(v) => updateTodayLog({ notes: v })}
-          placeholder="How did today go?"
+        <MoodLogger
+          entries={moodsForDay(moods, selectedDate)}
+          onAdd={(m, note) => addMood(m, note).then(flash)}
+          onDelete={(id) => deleteMood(id).then(flash)}
         />
       </Section>
     </div>
   );
+}
+
+function moodsForDay(moods: MoodEntry[], date: string) {
+  return moods
+    .filter((m) => m.log_date === date)
+    .sort((a, b) =>
+      (a.created_at ?? "").localeCompare(b.created_at ?? "")
+    );
 }
 
 function DayNav({
@@ -191,13 +211,16 @@ function DayNav({
   onChange: (d: string) => void;
 }) {
   const today = todayKey();
-  const isToday = date === today;
+  const isToday = date >= today;
   const d = new Date(date + "T00:00:00");
 
   const shift = (days: number) => {
     const nd = new Date(d);
     nd.setDate(nd.getDate() + days);
-    onChange(nd.toISOString().slice(0, 10));
+    const key = nd.toISOString().slice(0, 10);
+    // never allow navigating into the future
+    if (key > today) return;
+    onChange(key);
   };
 
   const label = isToday
@@ -209,17 +232,17 @@ function DayNav({
       });
 
   return (
-    <div className="card flex items-center justify-between p-2">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-2 p-2.5">
       <button
         onClick={() => shift(-1)}
-        className="h-9 w-9 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95"
+        className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-3 text-muted transition active:scale-90"
         aria-label="Previous day"
       >
-        ‹
+        <ChevronLeft size={20} />
       </button>
       <div className="text-center">
-        <p className="text-sm font-bold">{label}</p>
-        <p className="text-[10px] text-muted">
+        <p className="text-base font-bold">{label}</p>
+        <p className="text-[11px] text-muted">
           {d.toLocaleDateString(undefined, {
             weekday: "long",
             year: "numeric",
@@ -231,10 +254,10 @@ function DayNav({
       <button
         onClick={() => shift(1)}
         disabled={isToday}
-        className="h-9 w-9 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95 disabled:opacity-30"
+        className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-3 text-muted transition active:scale-90 disabled:opacity-25"
         aria-label="Next day"
       >
-        ›
+        <ChevronRight size={20} />
       </button>
     </div>
   );
@@ -282,6 +305,169 @@ function WeightInput({ current, onSave }: { current: number; onSave: (kg: number
         Log
       </button>
     </div>
+  );
+}
+
+/* ---------- Mood logger: unlimited entries per day ---------- */
+function MoodLogger({
+  entries,
+  onAdd,
+  onDelete,
+}: {
+  entries: MoodEntry[];
+  onAdd: (mood: MoodEntry["mood"], note: string | null) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [mood, setMood] = useState<MoodEntry["mood"]>("ok");
+  const [note, setNote] = useState("");
+
+  return (
+    <div className="space-y-3">
+      <span className="field-label">How are you feeling?</span>
+      <div className="grid grid-cols-4 gap-2">
+        {MOODS.map((m) => {
+          const active = mood === m.value;
+          return (
+            <button
+              key={m.value}
+              onClick={() => setMood(m.value)}
+              className="flex flex-col items-center gap-1.5 rounded-xl py-3 transition active:scale-95"
+              style={{
+                background: active ? `${m.color}22` : "var(--surface-3)",
+                color: active ? m.color : "var(--muted)",
+              }}
+            >
+              <m.Icon size={26} />
+              <span className="text-[10px] font-semibold">{m.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="field flex items-center px-3.5">
+        <input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Add a note (optional)"
+          className="w-full bg-transparent py-3 text-sm outline-none"
+        />
+      </div>
+      <button
+        onClick={() => {
+          onAdd(mood, note.trim() || null);
+          setNote("");
+        }}
+        className="w-full rounded-xl bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
+      >
+        Add mood
+      </button>
+
+      {entries.length > 0 && (
+        <div className="space-y-2 pt-1">
+          {entries.map((e) => {
+            const meta = MOODS.find((m) => m.value === e.mood) ?? MOODS[1];
+            const time = e.created_at
+              ? new Date(e.created_at).toLocaleTimeString(undefined, {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })
+              : "";
+            return (
+              <div
+                key={e.id}
+                className="flex items-center gap-3 rounded-xl bg-surface-3 px-3 py-2.5"
+              >
+                <span style={{ color: meta.color }}>
+                  <meta.Icon size={22} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold" style={{ color: meta.color }}>
+                    {meta.label}
+                    <span className="ml-2 text-[11px] font-normal text-muted">
+                      {time}
+                    </span>
+                  </p>
+                  {e.note && (
+                    <p className="truncate text-xs text-muted">{e.note}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => e.id && onDelete(e.id)}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted transition active:scale-90"
+                  aria-label="Delete mood"
+                >
+                  <CloseIcon size={14} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Sugar: synced view of the day's sugar from food ---------- */
+function SugarSection({
+  sugarG,
+  limit,
+  sugarFoods,
+}: {
+  sugarG: number;
+  limit: number;
+  sugarFoods: FoodEntry[];
+}) {
+  const pct = limit > 0 ? Math.min(sugarG / limit, 1.4) : 0;
+  const over = sugarG > limit;
+  return (
+    <Section
+      title="Sugar"
+      tint="var(--pink)"
+      delay={140}
+      summary={`${Math.round(sugarG * 10) / 10}g of ${limit}g${over ? " · over limit" : ""}`}
+    >
+      <div className="flex items-baseline justify-between">
+        <span className="flex items-center gap-2 text-sm font-semibold text-muted">
+          <SugarIcon size={18} /> Today&apos;s sugar
+        </span>
+        <span
+          className="display text-2xl font-light"
+          style={{ color: over ? "var(--danger)" : "var(--pink)" }}
+        >
+          {Math.round(sugarG * 10) / 10}
+          <span className="text-sm text-muted">/{limit}g</span>
+        </span>
+      </div>
+      <div className="h-2.5 overflow-hidden rounded-full bg-surface-3">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${Math.min(pct * 100, 100)}%`,
+            background: over ? "var(--danger)" : "var(--pink)",
+          }}
+        />
+      </div>
+      <p className="text-[11px] text-muted">
+        {over
+          ? `Over by ${Math.round((sugarG - limit) * 10) / 10}g. Sugar is pulled automatically from your food diary.`
+          : `${Math.round((limit - sugarG) * 10) / 10}g left. Anything sugary you log appears here automatically.`}
+      </p>
+      {sugarFoods.length > 0 && (
+        <div className="space-y-1.5 pt-1">
+          <p className="field-label">From your food today</p>
+          {sugarFoods.map((f) => (
+            <div
+              key={f.id}
+              className="flex items-center justify-between rounded-xl bg-surface-3 px-3 py-2 text-sm"
+            >
+              <span className="min-w-0 truncate">{f.name}</span>
+              <span className="display shrink-0 text-sm" style={{ color: "var(--pink)" }}>
+                {f.sugar_g}g
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Section>
   );
 }
 
@@ -386,7 +572,7 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
               className="ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted transition active:scale-90"
               aria-label="Delete"
             >
-              ✕
+              <CloseIcon size={14} />
             </button>
           </div>
         ))}
@@ -436,9 +622,9 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
       ) : (
         <button
           onClick={() => setCreating(true)}
-          className="w-full rounded-2xl border border-dashed border-border py-3 text-xs font-bold uppercase tracking-wide text-muted transition active:scale-[0.98]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-3 text-xs font-bold uppercase tracking-wide text-muted transition active:scale-[0.98]"
         >
-          ＋ New food
+          <PlusIcon size={16} /> New food
         </button>
       )}
     </Section>
@@ -485,10 +671,10 @@ function PickRow({
           </p>
         </div>
         <span
-          className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-lg text-accent transition"
+          className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-accent transition"
           style={{ transform: open ? "rotate(45deg)" : "none" }}
         >
-          ＋
+          <PlusIcon size={18} />
         </span>
       </button>
 
@@ -553,9 +739,9 @@ function PickRow({
           <div className="flex items-center justify-between pt-0.5">
             <button
               onClick={() => setEditing(true)}
-              className="text-xs font-semibold text-accent-2"
+              className="flex items-center gap-1.5 text-xs font-semibold text-accent-2"
             >
-              ✎ Edit details
+              <EditIcon size={14} /> Edit details
             </button>
             {onForget && (
               <button

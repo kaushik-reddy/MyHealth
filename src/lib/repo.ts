@@ -2,6 +2,7 @@ import type {
   DailyLog,
   FoodEntry,
   FoodLibraryItem,
+  MoodEntry,
   Profile,
   SugarItem,
   WeightEntry,
@@ -30,6 +31,10 @@ export interface Repo {
 
   getWeights(): Promise<WeightEntry[]>;
   addWeight(entry: WeightEntry): Promise<void>;
+
+  getMoods(): Promise<MoodEntry[]>;
+  addMood(entry: MoodEntry): Promise<MoodEntry>;
+  deleteMood(id: string): Promise<void>;
 }
 
 export function emptyLog(date: string): DailyLog {

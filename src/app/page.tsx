@@ -11,6 +11,13 @@ import {
   projectWeight,
   tdee,
 } from "@/lib/health";
+import {
+  StepsIcon,
+  ProteinIcon,
+  WaterIcon,
+  SugarIcon,
+  FlameIcon,
+} from "@/components/icons";
 
 export default function DashboardPage() {
   return (
@@ -126,13 +133,22 @@ function Dashboard() {
 
   const goals: GoalRow[] = [
     {
+      key: "calories",
+      label: "Calories",
+      value: todayLog.calories_intake,
+      max: profile.daily_calorie_target,
+      unit: "kcal",
+      color: "#3b82f6",
+      Icon: FlameIcon,
+    },
+    {
       key: "steps",
       label: "Steps",
       value: todayLog.steps,
       max: profile.daily_step_goal,
       unit: "",
-      color: "#3b82f6",
-      icon: "👟",
+      color: "#38bdf8",
+      Icon: StepsIcon,
     },
     {
       key: "protein",
@@ -141,7 +157,7 @@ function Dashboard() {
       max: profile.daily_protein_goal_g,
       unit: "g",
       color: "#34d399",
-      icon: "🥩",
+      Icon: ProteinIcon,
     },
     {
       key: "water",
@@ -149,8 +165,8 @@ function Dashboard() {
       value: todayLog.water_ml,
       max: profile.daily_water_goal_ml,
       unit: "ml",
-      color: "#38bdf8",
-      icon: "💧",
+      color: "#60a5fa",
+      Icon: WaterIcon,
     },
     {
       key: "sugar",
@@ -158,19 +174,42 @@ function Dashboard() {
       value: todayLog.sugar_g,
       max: profile.daily_sugar_limit_g,
       unit: "g",
-      color: "#818cf8",
-      icon: "🍬",
+      color: "#a5b4fc",
+      Icon: SugarIcon,
       invert: true,
     },
   ];
 
+  // overall day completion across all goals (sugar = adherence to staying under)
+  const dayProgress = useMemo(() => {
+    const parts = goals.map((g) => {
+      if (g.max <= 0) return 0;
+      if (g.invert) return g.value <= g.max ? 1 : Math.max(0, g.max / g.value);
+      return Math.min(g.value / g.max, 1);
+    });
+    return parts.reduce((s, p) => s + p, 0) / parts.length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    todayLog.calories_intake,
+    todayLog.steps,
+    todayLog.protein_g,
+    todayLog.water_ml,
+    todayLog.sugar_g,
+    profile.daily_calorie_target,
+    profile.daily_step_goal,
+    profile.daily_protein_goal_g,
+    profile.daily_water_goal_ml,
+    profile.daily_sugar_limit_g,
+  ]);
+
   return (
     <div className="space-y-6">
-      {/* ===== Hero: calorie ring ===== */}
+      {/* ===== Hero: overall day progress ring ===== */}
       <section className="rise-in flex flex-col items-center pt-2">
         <HeroRing
-          value={todayLog.calories_intake}
-          max={profile.daily_calorie_target}
+          pct={dayProgress}
+          calories={todayLog.calories_intake}
+          target={profile.daily_calorie_target}
         />
         <p className="mt-5 text-sm text-muted">
           {remaining > 0 ? (
@@ -178,11 +217,11 @@ function Dashboard() {
               <span className="font-semibold text-foreground">
                 {remaining.toLocaleString()} kcal
               </span>{" "}
-              left today
+              left · {Math.round(dayProgress * 100)}% of goals met
             </>
           ) : (
-            <span className="font-semibold text-danger">
-              Daily target reached
+            <span className="font-semibold text-foreground">
+              {Math.round(dayProgress * 100)}% of today&apos;s goals met
             </span>
           )}
         </p>
@@ -261,14 +300,22 @@ function Dashboard() {
   );
 }
 
-/* ---------- Hero ring ---------- */
-function HeroRing({ value, max }: { value: number; max: number }) {
+/* ---------- Hero ring (overall day progress) ---------- */
+function HeroRing({
+  pct,
+  calories,
+  target,
+}: {
+  pct: number;
+  calories: number;
+  target: number;
+}) {
   const size = 220;
   const stroke = 16;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const pct = max > 0 ? Math.min(value / max, 1) : 0;
-  const offset = c * (1 - pct);
+  const clamped = Math.min(Math.max(pct, 0), 1);
+  const offset = c * (1 - clamped);
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -303,11 +350,15 @@ function HeroRing({ value, max }: { value: number; max: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="display text-5xl font-light">
-          {Math.round(value).toLocaleString()}
+        <span className="display text-6xl font-light">
+          {Math.round(clamped * 100)}
+          <span className="text-2xl text-muted">%</span>
         </span>
         <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted">
-          of {max.toLocaleString()} kcal
+          day complete
+        </span>
+        <span className="mt-2 text-xs text-muted">
+          {Math.round(calories).toLocaleString()} / {target.toLocaleString()} kcal
         </span>
       </div>
     </div>
@@ -346,7 +397,7 @@ interface GoalRow {
   max: number;
   unit: string;
   color: string;
-  icon: string;
+  Icon: (p: React.SVGProps<SVGSVGElement> & { size?: number }) => React.JSX.Element;
   invert?: boolean;
 }
 
@@ -374,22 +425,21 @@ function LiveTracker({ goals }: { goals: GoalRow[] }) {
       </div>
 
       {/* rows */}
-      <div className="space-y-3.5 px-5 py-4">
+      <div className="space-y-4 px-5 py-4">
         {goals.map((g) => {
           const pct = g.max > 0 ? Math.min(g.value / g.max, 1) : 0;
           const over = g.invert && g.value > g.max;
           const color = over ? "var(--danger)" : g.color;
           return (
             <div key={g.key} className="flex items-center gap-3">
-              <span className="w-5 text-center text-base">{g.icon}</span>
+              <span style={{ color }}>
+                <g.Icon size={18} />
+              </span>
               <span className="w-16 shrink-0 text-xs font-semibold text-muted">
                 {g.label}
               </span>
-              <div className="tower-bar flex-1">
-                <div
-                  className="tower-fill"
-                  style={{ width: `${pct * 100}%`, background: color }}
-                />
+              <div className="flex-1">
+                <SegmentBar pct={pct} color={color} />
               </div>
               <span className="display w-20 shrink-0 text-right text-xs">
                 {Math.round(g.value).toLocaleString()}
@@ -401,6 +451,26 @@ function LiveTracker({ goals }: { goals: GoalRow[] }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/* dotted / segmented progress bar (Box Box style) */
+function SegmentBar({ pct, color }: { pct: number; color: string }) {
+  const SEGMENTS = 18;
+  const filled = Math.round(Math.min(Math.max(pct, 0), 1) * SEGMENTS);
+  return (
+    <div className="flex items-center gap-[3px]">
+      {Array.from({ length: SEGMENTS }).map((_, i) => (
+        <span
+          key={i}
+          className="h-2 flex-1 rounded-full transition-colors"
+          style={{
+            background: i < filled ? color : "var(--surface-3)",
+            opacity: i < filled ? 1 : 0.7,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -665,20 +735,3 @@ function MiniCard({
     </div>
   );
 }
-
-function Arrow() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="#3b82f6"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
-void Arrow;

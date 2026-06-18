@@ -2,6 +2,7 @@ import type {
   DailyLog,
   FoodEntry,
   FoodLibraryItem,
+  MoodEntry,
   Profile,
   SugarItem,
   WeightEntry,
@@ -195,6 +196,36 @@ export class HybridRepo implements Repo {
       await this.primary.addWeight(entry);
     } catch {
       /* keep local */
+    }
+  }
+
+  // ---------- moods ----------
+  async getMoods() {
+    try {
+      const rows = await this.primary.getMoods();
+      if (rows.length) return rows;
+    } catch {
+      /* fall through */
+    }
+    return this.cache.getMoods();
+  }
+
+  async addMood(entry: MoodEntry) {
+    const saved = await this.cache.addMood(entry);
+    try {
+      await this.primary.addMood(saved);
+    } catch {
+      /* keep local */
+    }
+    return saved;
+  }
+
+  async deleteMood(id: string) {
+    await this.cache.deleteMood(id);
+    try {
+      await this.primary.deleteMood(id);
+    } catch {
+      /* ignore */
     }
   }
 }

@@ -99,3 +99,13 @@ export interface WeightEntry {
   entry_date: string;
   weight_kg: number;
 }
+
+/** A timestamped mood/journal entry — many allowed per day. */
+export interface MoodEntry {
+  id?: string;
+  user_id?: string;
+  log_date: string; // YYYY-MM-DD
+  mood: "great" | "ok" | "tired" | "bad";
+  note: string | null;
+  created_at?: string;
+}

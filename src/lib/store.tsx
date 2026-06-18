@@ -15,6 +15,7 @@ import type {
   DailyLog,
   FoodEntry,
   FoodLibraryItem,
+  MoodEntry,
   Profile,
   SugarItem,
   WeightEntry,
@@ -36,6 +37,7 @@ interface StoreState {
   foodLibrary: FoodLibraryItem[];
   sugarItems: SugarItem[];
   weights: WeightEntry[];
+  moods: MoodEntry[];
 
   /** The day currently being viewed/edited (YYYY-MM-DD). Defaults to today. */
   selectedDate: string;
@@ -61,6 +63,8 @@ interface StoreState {
   logSugarItem: (item: SugarItem) => Promise<void>;
   deleteSugarItem: (id: string) => Promise<void>;
   addWeight: (kg: number) => Promise<void>;
+  addMood: (mood: MoodEntry["mood"], note: string | null) => Promise<void>;
+  deleteMood: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -83,6 +87,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [foodLibrary, setFoodLibrary] = useState<FoodLibraryItem[]>([]);
   const [sugarItems, setSugarItems] = useState<SugarItem[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
+  const [moods, setMoods] = useState<MoodEntry[]>([]);
   const [selectedDate, setSelectedDateState] = useState(todayKey());
 
   const repoRef = useRef<Repo>(new LocalRepo());
@@ -97,7 +102,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const since = new Date();
     since.setDate(since.getDate() - 30);
     const sinceKey = since.toISOString().slice(0, 10);
-    const [p, lg, fd, rf, lib, sg, wt] = await Promise.all([
+    const [p, lg, fd, rf, lib, sg, wt, md] = await Promise.all([
       repo.getProfile(),
       repo.getLogs(),
       repo.getFoods(day),
@@ -105,6 +110,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       repo.getFoodLibrary(),
       repo.getSugarItems(),
       repo.getWeights(),
+      repo.getMoods(),
     ]);
     setProfile(p);
     setLogs(lg);
@@ -113,6 +119,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setFoodLibrary(lib);
     setSugarItems(sg);
     setWeights(wt);
+    setMoods(md);
   }, []);
 
   useEffect(() => {
@@ -317,6 +324,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [today, realToday, updateTodayLog, profile, saveProfile]
   );
 
+  const addMood = useCallback(
+    async (mood: MoodEntry["mood"], note: string | null) => {
+      const entry: MoodEntry = {
+        log_date: today,
+        mood,
+        note,
+        created_at: new Date().toISOString(),
+      };
+      const saved = await repoRef.current.addMood(entry);
+      setMoods((prev) => [...prev, saved]);
+    },
+    [today]
+  );
+
+  const deleteMood = useCallback(async (id: string) => {
+    await repoRef.current.deleteMood(id);
+    setMoods((prev) => prev.filter((m) => m.id !== id));
+  }, []);
+
   const signOut = useCallback(async () => {
     if (supabaseConfigured) {
       const sb = createClient();
@@ -337,6 +363,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     foodLibrary,
     sugarItems,
     weights,
+    moods,
     selectedDate,
     setSelectedDate,
     saveProfile,
@@ -352,6 +379,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     logSugarItem,
     deleteSugarItem,
     addWeight,
+    addMood,
+    deleteMood,
     refresh: loadAll,
     signOut,
   };

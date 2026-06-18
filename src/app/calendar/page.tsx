@@ -5,7 +5,19 @@ import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { tdee, todayKey } from "@/lib/health";
-import type { DailyLog } from "@/lib/types";
+import type { DailyLog, MoodEntry } from "@/lib/types";
+import {
+  MealIcon,
+  StepsIcon,
+  FlameIcon,
+  SugarIcon,
+  ProteinIcon,
+  WaterIcon,
+  ScaleIcon,
+  ChevronLeft,
+  ChevronRight,
+  MOODS,
+} from "@/components/icons";
 
 export default function CalendarPage() {
   return (
@@ -18,7 +30,7 @@ export default function CalendarPage() {
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
 function CalendarView() {
-  const { profile, logs } = useStore();
+  const { profile, logs, moods } = useStore();
   const today = todayKey();
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
@@ -63,21 +75,21 @@ function CalendarView() {
   return (
     <div className="space-y-5">
       {/* Month switcher */}
-      <div className="card flex items-center justify-between p-2">
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-surface-2 p-2.5">
         <button
           onClick={() => shiftMonth(-1)}
-          className="h-9 w-9 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-3 text-muted active:scale-90"
           aria-label="Previous month"
         >
-          ‹
+          <ChevronLeft size={20} />
         </button>
         <p className="text-sm font-bold uppercase tracking-wide">{monthLabel}</p>
         <button
           onClick={() => shiftMonth(1)}
-          className="h-9 w-9 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-3 text-muted active:scale-90"
           aria-label="Next month"
         >
-          ›
+          <ChevronRight size={20} />
         </button>
       </div>
 
@@ -127,6 +139,7 @@ function CalendarView() {
       <DaySummary
         date={selected}
         log={selectedLog}
+        moods={moods.filter((m) => m.log_date === selected)}
         maintenance={tdee(
           profile.sex,
           profile.current_weight_kg,
@@ -146,6 +159,7 @@ function CalendarView() {
 function DaySummary({
   date,
   log,
+  moods,
   maintenance,
   target,
   stepGoal,
@@ -154,6 +168,7 @@ function DaySummary({
 }: {
   date: string;
   log: DailyLog | undefined;
+  moods: MoodEntry[];
   maintenance: number;
   target: number;
   stepGoal: number;
@@ -167,43 +182,38 @@ function DaySummary({
     day: "numeric",
   });
   const net = log ? log.calories_intake - (maintenance + log.active_calories) : 0;
+  const hasAnything = !!log || moods.length > 0;
 
   return (
-    <div className="card p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="card p-5">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-bold">{nice}</h2>
+          <h2 className="text-base font-bold">{nice}</h2>
           <p className="text-[11px] text-muted">
-            {log ? "What you logged" : "Nothing logged yet"}
+            {hasAnything ? "What you logged" : "Nothing logged yet"}
           </p>
         </div>
         <Link
           href={`/checkin?date=${date}`}
-          className="rounded-lg bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-white transition active:scale-95"
+          className="rounded-xl bg-accent px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white transition active:scale-95"
         >
-          {log ? "Edit day" : "Add data"}
+          {hasAnything ? "Edit day" : "Add data"}
         </Link>
       </div>
 
       {log ? (
-        <div className="space-y-2">
-          <Row label="🍽️ Eaten" value={`${Math.round(log.calories_intake)} kcal`} sub={`goal ${target}`} />
-          <Row label="🚶 Steps" value={log.steps.toLocaleString()} sub={`goal ${stepGoal.toLocaleString()} · ${log.distance_km.toFixed(1)} km`} />
-          <Row label="🔥 Workout burn" value={`${Math.round(log.active_calories)} kcal`} />
-          <Row label="🍬 Sugar" value={`${log.sugar_g} g`} sub={`limit ${sugarLimit} g`} />
-          <Row label="🥩 Protein" value={`${Math.round(log.protein_g)} g`} />
-          <Row label="💧 Water" value={`${log.water_ml} ml`} sub={`goal ${waterGoal} ml`} />
-          {log.weight_kg ? <Row label="⚖️ Weight" value={`${log.weight_kg} kg`} /> : null}
-          {log.mood ? <Row label="🙂 Mood" value={log.mood} /> : null}
-          {log.notes ? (
-            <p className="rounded-lg border border-border bg-surface-2 p-2 text-xs text-muted">
-              “{log.notes}”
-            </p>
-          ) : null}
-          <div className="mt-2 flex items-center justify-between rounded-lg border border-border bg-surface-2 px-3 py-2">
+        <div className="space-y-1">
+          <Row Icon={MealIcon} color="#3b82f6" label="Eaten" value={`${Math.round(log.calories_intake)} kcal`} sub={`goal ${target}`} />
+          <Row Icon={StepsIcon} color="#38bdf8" label="Steps" value={log.steps.toLocaleString()} sub={`goal ${stepGoal.toLocaleString()} · ${log.distance_km.toFixed(1)} km`} />
+          <Row Icon={FlameIcon} color="#f59e0b" label="Workout burn" value={`${Math.round(log.active_calories)} kcal`} />
+          <Row Icon={SugarIcon} color="#a5b4fc" label="Sugar" value={`${log.sugar_g} g`} sub={`limit ${sugarLimit} g`} />
+          <Row Icon={ProteinIcon} color="#34d399" label="Protein" value={`${Math.round(log.protein_g)} g`} />
+          <Row Icon={WaterIcon} color="#60a5fa" label="Water" value={`${log.water_ml} ml`} sub={`goal ${waterGoal} ml`} />
+          {log.weight_kg ? <Row Icon={ScaleIcon} color="#e6c073" label="Weight" value={`${log.weight_kg} kg`} /> : null}
+          <div className="mt-3 flex items-center justify-between rounded-xl bg-surface-3 px-4 py-3">
             <span className="text-xs text-muted">Energy balance</span>
             <span
-              className="mono text-sm font-bold"
+              className="display text-base"
               style={{ color: net <= 0 ? "var(--green)" : "var(--danger)" }}
             >
               {net > 0 ? "+" : ""}
@@ -212,21 +222,97 @@ function DaySummary({
           </div>
         </div>
       ) : (
-        <p className="text-xs text-muted">
-          Tap <span className="font-semibold text-accent">Add data</span> to log meals,
-          steps, water and more for this day.
-        </p>
+        moods.length === 0 && (
+          <p className="text-xs text-muted">
+            Tap <span className="font-semibold text-accent">Add data</span> to log meals,
+            steps, water and more for this day.
+          </p>
+        )
       )}
+
+      {moods.length > 0 && <MoodTimeline entries={moods} />}
     </div>
   );
 }
 
-function Row({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function MoodTimeline({ entries }: { entries: MoodEntry[] }) {
+  const sorted = entries
+    .slice()
+    .sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""));
   return (
-    <div className="flex items-center justify-between border-b border-border/50 py-1.5 last:border-0">
-      <span className="text-sm">{label}</span>
+    <div className="mt-4 rounded-xl bg-surface-3 p-4">
+      <p className="field-label">Mood through the day</p>
+      {/* sparkline of mood levels */}
+      <div className="mb-3 flex h-16 items-end gap-1.5">
+        {sorted.map((e) => {
+          const meta = MOODS.find((m) => m.value === e.mood) ?? MOODS[1];
+          const level = { great: 1, ok: 0.7, tired: 0.45, bad: 0.25 }[e.mood];
+          return (
+            <div
+              key={e.id}
+              className="flex-1 rounded-md"
+              style={{
+                height: `${level * 100}%`,
+                minHeight: 8,
+                background: meta.color,
+              }}
+              title={meta.label}
+            />
+          );
+        })}
+      </div>
+      <div className="space-y-1.5">
+        {sorted.map((e) => {
+          const meta = MOODS.find((m) => m.value === e.mood) ?? MOODS[1];
+          const time = e.created_at
+            ? new Date(e.created_at).toLocaleTimeString(undefined, {
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : "";
+          return (
+            <div key={e.id} className="flex items-center gap-2.5">
+              <span style={{ color: meta.color }}>
+                <meta.Icon size={18} />
+              </span>
+              <span className="text-xs font-semibold" style={{ color: meta.color }}>
+                {meta.label}
+              </span>
+              <span className="text-[11px] text-muted">{time}</span>
+              {e.note && (
+                <span className="min-w-0 flex-1 truncate text-[11px] text-muted">
+                  · {e.note}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Row({
+  Icon,
+  color,
+  label,
+  value,
+  sub,
+}: {
+  Icon: (p: React.SVGProps<SVGSVGElement> & { size?: number }) => React.JSX.Element;
+  color: string;
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <span className="chip h-9 w-9 rounded-xl" style={{ background: `${color}1f`, color }}>
+        <Icon size={18} />
+      </span>
+      <span className="flex-1 text-sm">{label}</span>
       <span className="text-right">
-        <span className="mono text-sm font-bold">{value}</span>
+        <span className="display text-sm">{value}</span>
         {sub && <span className="block text-[10px] text-muted">{sub}</span>}
       </span>
     </div>

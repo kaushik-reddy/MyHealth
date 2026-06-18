@@ -102,12 +102,23 @@ create table if not exists public.weight_entries (
   unique (user_id, entry_date)
 );
 
+-- ---------- MOOD ENTRIES (many per day) ----------
+create table if not exists public.mood_entries (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  log_date   date not null,
+  mood       text not null check (mood in ('great','ok','tired','bad')),
+  note       text,
+  created_at timestamptz not null default now()
+);
+
 -- Helpful indexes.
 create index if not exists idx_daily_logs_user_date on public.daily_logs (user_id, log_date);
 create index if not exists idx_food_entries_user_date on public.food_entries (user_id, log_date);
 create index if not exists idx_food_library_user on public.food_library (user_id, times_used desc);
 create index if not exists idx_sugar_items_user on public.sugar_items (user_id);
 create index if not exists idx_weight_entries_user on public.weight_entries (user_id, entry_date);
+create index if not exists idx_mood_entries_user_date on public.mood_entries (user_id, log_date);
 
 -- ============================================================
 --  Idempotent migrations (safe to re-run on existing databases)
@@ -129,6 +140,7 @@ alter table public.food_entries   enable row level security;
 alter table public.food_library   enable row level security;
 alter table public.sugar_items    enable row level security;
 alter table public.weight_entries enable row level security;
+alter table public.mood_entries   enable row level security;
 
 -- profiles: id == auth.uid()
 drop policy if exists "own profile" on public.profiles;
@@ -154,6 +166,10 @@ create policy "own sugar_items" on public.sugar_items
 
 drop policy if exists "own weight_entries" on public.weight_entries;
 create policy "own weight_entries" on public.weight_entries
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own mood_entries" on public.mood_entries;
+create policy "own mood_entries" on public.mood_entries
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ============================================================

@@ -90,21 +90,19 @@ export default function Background() {
         </svg>
       </div>
 
-      {/* floating leaves / food bits */}
+      {/* floating motes */}
       {LEAVES.map((l, i) => (
         <span
           key={i}
-          className="absolute text-lg"
+          className="absolute h-1.5 w-1.5 rounded-full"
           style={{
             left: `${l.left}%`,
             top: "-6vh",
             opacity: 0,
+            background: "rgba(96,165,250,0.5)",
             animation: `float-leaf ${l.dur}s linear ${l.delay}s infinite`,
-            filter: "saturate(0.7)",
           }}
-        >
-          {l.emoji}
-        </span>
+        />
       ))}
     </div>
   );
@@ -122,11 +120,11 @@ function Pine({ x, y, s, c }: { x: number; y: number; s: number; c: string }) {
 }
 
 const LEAVES = [
-  { emoji: "💧", left: 8, dur: 22, delay: 0 },
-  { emoji: "❄️", left: 22, dur: 28, delay: 4 },
-  { emoji: "💧", left: 40, dur: 24, delay: 9 },
-  { emoji: "🫐", left: 58, dur: 30, delay: 2 },
-  { emoji: "✨", left: 72, dur: 26, delay: 7 },
-  { emoji: "💧", left: 86, dur: 32, delay: 12 },
-  { emoji: "❄️", left: 94, dur: 27, delay: 15 },
+  { left: 8, dur: 22, delay: 0 },
+  { left: 22, dur: 28, delay: 4 },
+  { left: 40, dur: 24, delay: 9 },
+  { left: 58, dur: 30, delay: 2 },
+  { left: 72, dur: 26, delay: 7 },
+  { left: 86, dur: 32, delay: 12 },
+  { left: 94, dur: 27, delay: 15 },
 ];

@@ -15,6 +15,7 @@ import {
   tdee,
 } from "@/lib/health";
 import type { ActivityLevel, GoalType, Profile } from "@/lib/types";
+import { CheckIcon, EditIcon } from "@/components/icons";
 
 export default function ProfilePage() {
   return (
@@ -77,65 +78,64 @@ function ProfileEditor() {
   return (
     <div className="space-y-5">
       {saved && (
-        <div className="rounded-lg border border-green/40 bg-green/10 px-3 py-2 text-center text-xs font-semibold text-green">
-          Setup saved ✓
+        <div className="flex items-center justify-center gap-1.5 rounded-xl border border-green/40 bg-green/10 px-3 py-2 text-center text-xs font-semibold text-green">
+          <CheckIcon size={14} /> Saved
         </div>
       )}
 
-      {/* identity */}
-      <div className="card p-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border border-border bg-surface-2"
-            aria-label="Change profile picture"
-          >
-            {p.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.avatar_url} alt="Profile" className="h-full w-full object-cover" />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center text-lg font-bold text-muted">
-                {(p.full_name || "You")
-                  .split(" ")
-                  .map((w) => w[0])
-                  .slice(0, 2)
-                  .join("")
-                  .toUpperCase()}
-              </span>
-            )}
-            <span className="absolute inset-x-0 bottom-0 bg-accent/80 py-0.5 text-center text-[8px] font-bold uppercase tracking-wide text-white">
-              Edit
+      {/* identity hero */}
+      <div className="card flex flex-col items-center p-6 text-center">
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="relative h-24 w-24 overflow-hidden rounded-full border border-border bg-surface-3"
+          aria-label="Change profile picture"
+        >
+          {p.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-2xl font-bold text-muted">
+              {(p.full_name || "You")
+                .split(" ")
+                .map((w) => w[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
             </span>
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={onPickAvatar}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-bold">{p.full_name || "You"}</p>
-            <p className="truncate text-xs text-muted">
-              {demoMode ? "Demo mode · this device" : user?.email}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="mono text-xl font-black" style={{ color: bmiCat.color }}>
-              {bmiVal.toFixed(1)}
-            </p>
-            <p className="text-[10px] uppercase text-muted">{bmiCat.label} BMI</p>
-          </div>
-        </div>
-        <div className="mt-3">
-          <TextField
-            label="Display name"
-            value={p.full_name ?? ""}
-            onChange={(v) => set("full_name", v)}
-            placeholder="Your name"
-          />
+          )}
+          <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-accent text-white ring-2 ring-surface-2">
+            <EditIcon size={13} />
+          </span>
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onPickAvatar}
+        />
+        <p className="mt-3 text-xl font-bold">{p.full_name || "You"}</p>
+        <p className="text-xs text-muted">
+          {demoMode ? "Demo mode · this device" : user?.email}
+        </p>
+
+        {/* quick stats */}
+        <div className="mt-5 grid w-full grid-cols-3 gap-3">
+          <HeroStat label="Current" value={`${p.current_weight_kg}`} unit="kg" />
+          <HeroStat label="Goal" value={`${p.goal_weight_kg}`} unit="kg" />
+          <HeroStat label="BMI" value={bmiVal.toFixed(1)} unit={bmiCat.label} color={bmiCat.color} />
         </div>
       </div>
+
+      {/* identity edit */}
+      <Block title="Account" summary={p.full_name || "Set your name"}>
+        <TextField
+          label="Display name"
+          value={p.full_name ?? ""}
+          onChange={(v) => set("full_name", v)}
+          placeholder="Your name"
+        />
+      </Block>
 
       {/* body */}
       <Block
@@ -143,9 +143,7 @@ function ProfileEditor() {
         summary={`${p.sex} · ${p.age} yrs · ${p.height_cm} cm · ${p.current_weight_kg} kg → ${p.goal_weight_kg} kg`}
       >
         <div>
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Sex
-          </span>
+          <span className="field-label">Sex</span>
           <Segmented
             value={p.sex}
             onChange={(v) => set("sex", v)}
@@ -155,7 +153,7 @@ function ProfileEditor() {
             ]}
           />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <NumberField label="Age" value={p.age} onChange={(v) => set("age", v)} unit="yrs" />
           <NumberField label="Height" value={p.height_cm} onChange={(v) => set("height_cm", v)} unit="cm" />
         </div>
@@ -189,10 +187,10 @@ function ProfileEditor() {
             <button
               key={a}
               onClick={() => set("activity_level", a)}
-              className={`w-full rounded-lg border p-2.5 text-left text-sm transition ${
+              className={`w-full rounded-xl p-3 text-left text-sm transition ${
                 p.activity_level === a
-                  ? "border-accent bg-accent/10"
-                  : "border-border bg-surface-2"
+                  ? "bg-accent/15 text-foreground ring-1 ring-accent"
+                  : "bg-surface-3 text-muted"
               }`}
             >
               {ACTIVITY_LABELS[a]}
@@ -210,15 +208,13 @@ function ProfileEditor() {
             unit="kg/wk"
           />
         )}
-        <div className="card flex items-center justify-between bg-surface-2 p-3">
+        <button
+          onClick={() => set("daily_calorie_target", recommended)}
+          className="flex w-full items-center justify-between rounded-xl bg-surface-3 px-4 py-3 text-left"
+        >
           <span className="text-xs text-muted">Recommended target</span>
-          <button
-            onClick={() => set("daily_calorie_target", recommended)}
-            className="mono text-sm font-bold text-accent-2"
-          >
-            {recommended} kcal · tap to use
-          </button>
-        </div>
+          <span className="display text-sm text-accent-2">{recommended} kcal · use</span>
+        </button>
         <p className="text-[11px] text-muted">
           BMR {Math.round(bmr(p.sex, p.current_weight_kg, p.height_cm, p.age))} kcal · Maintenance {maintenance} kcal
         </p>
@@ -229,7 +225,7 @@ function ProfileEditor() {
         title="Daily targets"
         summary={`${p.daily_calorie_target} kcal · ${p.daily_sugar_limit_g}g sugar · ${p.daily_step_goal.toLocaleString()} steps`}
       >
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <NumberField
             label="Calories"
             value={p.daily_calorie_target}
@@ -264,14 +260,14 @@ function ProfileEditor() {
 
       <button
         onClick={save}
-        className="w-full rounded-lg bg-accent py-3.5 text-sm font-bold uppercase tracking-wide text-white"
+        className="w-full rounded-full bg-accent py-4 text-sm font-bold uppercase tracking-wider text-white transition active:scale-[0.98]"
       >
-        Save setup
+        Save changes
       </button>
 
       <button
         onClick={handleSignOut}
-        className="w-full rounded-lg border border-border py-3 text-sm font-bold uppercase tracking-wide text-muted"
+        className="w-full rounded-full bg-surface-2 py-3.5 text-sm font-bold uppercase tracking-wider text-muted transition active:scale-[0.98]"
       >
         {demoMode ? "Reset demo / exit" : "Sign out"}
       </button>
@@ -279,6 +275,28 @@ function ProfileEditor() {
       <p className="pb-2 text-center text-[10px] text-muted">
         MyHealth · your wellness companion · built for mobile
       </p>
+    </div>
+  );
+}
+
+function HeroStat({
+  label,
+  value,
+  unit,
+  color,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  color?: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-surface-3 px-2 py-3 text-center">
+      <p className="display text-xl font-light" style={{ color }}>
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10px] text-muted">{unit}</p>
+      <p className="text-[9px] uppercase tracking-wider text-muted">{label}</p>
     </div>
   );
 }

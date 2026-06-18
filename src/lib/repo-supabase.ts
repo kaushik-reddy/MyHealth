@@ -3,6 +3,7 @@ import type {
   DailyLog,
   FoodEntry,
   FoodLibraryItem,
+  MoodEntry,
   Profile,
   SugarItem,
   WeightEntry,
@@ -156,5 +157,29 @@ export class SupabaseRepo implements Repo {
       .from("weight_entries")
       .upsert(row, { onConflict: "user_id,entry_date" });
     if (error) throw error;
+  }
+
+  async getMoods() {
+    const { data } = await this.sb
+      .from("mood_entries")
+      .select("*")
+      .eq("user_id", this.userId)
+      .order("created_at", { ascending: true });
+    return (data as MoodEntry[]) ?? [];
+  }
+
+  async addMood(entry: MoodEntry) {
+    const row = { ...entry, user_id: this.userId };
+    const { data, error } = await this.sb
+      .from("mood_entries")
+      .insert(row)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as MoodEntry;
+  }
+
+  async deleteMood(id: string) {
+    await this.sb.from("mood_entries").delete().eq("id", id);
   }
 }

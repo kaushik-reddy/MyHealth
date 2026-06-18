@@ -2,6 +2,7 @@ import type {
   DailyLog,
   FoodEntry,
   FoodLibraryItem,
+  MoodEntry,
   Profile,
   SugarItem,
   WeightEntry,
@@ -15,6 +16,7 @@ const KEYS = {
   library: "mh:library",
   sugar: "mh:sugar",
   weights: "mh:weights",
+  moods: "mh:moods",
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -132,5 +134,27 @@ export class LocalRepo implements Repo {
     if (idx >= 0) all[idx] = entry;
     else all.push(entry);
     write(KEYS.weights, all);
+  }
+
+  async getMoods() {
+    return read<MoodEntry[]>(KEYS.moods, []);
+  }
+  async addMood(entry: MoodEntry) {
+    const all = read<MoodEntry[]>(KEYS.moods, []);
+    const withId = {
+      ...entry,
+      id: entry.id ?? uid(),
+      created_at: entry.created_at ?? new Date().toISOString(),
+    };
+    all.push(withId);
+    write(KEYS.moods, all);
+    return withId;
+  }
+  async deleteMood(id: string) {
+    const all = read<MoodEntry[]>(KEYS.moods, []);
+    write(
+      KEYS.moods,
+      all.filter((m) => m.id !== id)
+    );
   }
 }
