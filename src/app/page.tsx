@@ -85,6 +85,45 @@ function Dashboard() {
     profile.daily_calorie_target - todayLog.calories_intake
   );
 
+  // ----- Journey progress (Box Box "% completed" style) -----
+  const totalToChange = Math.abs(profile.start_weight_kg - profile.goal_weight_kg);
+  const changedSoFar = Math.abs(profile.start_weight_kg - profile.current_weight_kg);
+  const journeyPct =
+    totalToChange > 0 ? Math.min(changedSoFar / totalToChange, 1) : 0;
+  const daysTracked = useMemo(
+    () =>
+      new Set(
+        logs
+          .filter((l) => l.steps || l.calories_intake || l.water_ml)
+          .map((l) => l.log_date)
+      ).size,
+    [logs]
+  );
+  const totalKm = useMemo(
+    () => logs.reduce((s, l) => s + (l.distance_km || 0), 0),
+    [logs]
+  );
+
+  // ----- 14-day activity bars (per-round chart style) -----
+  const activity = useMemo(() => {
+    const byDate = new Map(logs.map((l) => [l.log_date, l]));
+    const out: { date: string; value: number; isToday: boolean; has: boolean }[] = [];
+    const today = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const log = byDate.get(key);
+      out.push({
+        date: key,
+        value: log?.calories_intake ?? 0,
+        isToday: i === 0,
+        has: !!log && (log.calories_intake > 0 || log.steps > 0),
+      });
+    }
+    return out;
+  }, [logs]);
+
   const goals: GoalRow[] = [
     {
       key: "steps",
@@ -167,39 +206,33 @@ function Dashboard() {
         <Motivation message={motivationFor(goals, remaining)} />
       </section>
 
-      {/* ===== Journey to goal ===== */}
-      <Link href="/progress" className="card rise-in block p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-              Journey to goal
-            </p>
-            <p className="display mt-2 text-4xl font-light">
-              {Math.abs(toGo).toFixed(1)}
-              <span className="ml-1 text-base font-normal text-muted">
-                kg to go
-              </span>
-            </p>
-            {reachDate ? (
-              <p className="mt-2 text-xs text-accent-2">
-                Est.{" "}
-                {reachDate.toLocaleDateString(undefined, {
+      {/* ===== Journey progress (Box Box style) ===== */}
+      <Link href="/progress" className="block">
+        <JourneyProgress
+          pct={journeyPct}
+          changed={changedSoFar}
+          total={totalToChange}
+          losing={toGo >= 0}
+          kmTotal={totalKm}
+          daysTracked={daysTracked}
+          reachLabel={
+            reachDate
+              ? reachDate.toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
-                })}
-              </p>
-            ) : (
-              <p className="mt-2 text-xs text-muted">
-                Log meals to forecast your goal date
-              </p>
-            )}
-          </div>
-          <span className="chip" style={{ background: "#3b82f622" }}>
-            <Arrow />
-          </span>
-        </div>
+                })
+              : null
+          }
+        />
       </Link>
+
+      {/* ===== 14-day activity (per-round bar chart style) ===== */}
+      <ActivityBars
+        bars={activity}
+        target={profile.daily_calorie_target}
+        streak={streak}
+      />
 
       {/* ===== Mini stats ===== */}
       <section className="rise-in grid grid-cols-3 gap-3">
@@ -372,6 +405,193 @@ function LiveTracker({ goals }: { goals: GoalRow[] }) {
   );
 }
 
+/* ---------- Journey progress (Box Box "% completed" widget) ---------- */
+function JourneyProgress({
+  pct,
+  changed,
+  total,
+  losing,
+  kmTotal,
+  daysTracked,
+  reachLabel,
+}: {
+  pct: number;
+  changed: number;
+  total: number;
+  losing: boolean;
+  kmTotal: number;
+  daysTracked: number;
+  reachLabel: string | null;
+}) {
+  const SEGMENTS = 24;
+  const filled = Math.round(pct * SEGMENTS);
+  const green = "#34d399";
+  return (
+    <div className="card overflow-hidden p-6">
+      {/* big % + caption */}
+      <div className="flex items-baseline gap-3">
+        <span className="display text-5xl font-light" style={{ color: green }}>
+          {Math.round(pct * 100)}%
+        </span>
+        <span className="text-sm font-semibold leading-tight text-muted">
+          {changed.toFixed(1)} of {total.toFixed(1)} kg
+          <br />
+          {losing ? "lost" : "gained"}
+        </span>
+      </div>
+
+      {/* segmented bars */}
+      <div className="mt-5 flex items-end gap-[3px]">
+        {Array.from({ length: SEGMENTS }).map((_, i) => (
+          <span
+            key={i}
+            className="flex-1 rounded-full transition-all"
+            style={{
+              height: 28,
+              background: i < filled ? green : "var(--surface-3)",
+              opacity: i < filled ? 1 : 0.6,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* two icon stats */}
+      <div className="mt-6 flex items-center justify-between">
+        <Stat icon={<RouteIcon color={green} />} value={`${daysTracked}`} label="Days Tracked" color={green} />
+        <Stat icon={<PathIcon color={green} />} value={`${kmTotal.toFixed(1)}`} label="Kms Covered" color={green} />
+      </div>
+
+      {reachLabel && (
+        <p className="mt-4 text-xs text-muted">
+          On pace to reach your goal by{" "}
+          <span style={{ color: green }}>{reachLabel}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Stat({
+  icon,
+  value,
+  label,
+  color,
+}: {
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+  color: string;
+}) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {icon}
+      <div className="leading-tight">
+        <p className="display text-2xl font-light" style={{ color }}>
+          {value}
+        </p>
+        <p className="text-[11px] text-muted">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- 14-day activity (per-round bar chart style) ---------- */
+function ActivityBars({
+  bars,
+  target,
+  streak,
+}: {
+  bars: { date: string; value: number; isToday: boolean; has: boolean }[];
+  target: number;
+  streak: number;
+}) {
+  const max = Math.max(target, ...bars.map((b) => b.value), 1);
+  const logged = bars.filter((b) => b.has).length;
+  return (
+    <div className="card overflow-hidden p-6">
+      <div className="mb-5 flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+            Last 14 days
+          </p>
+          <p className="display mt-1.5 text-3xl font-light">
+            {logged}
+            <span className="ml-1 text-sm font-normal text-muted">
+              days logged
+            </span>
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="display text-2xl font-light text-accent-2">{streak}</p>
+          <p className="text-[11px] text-muted">day streak</p>
+        </div>
+      </div>
+
+      <div className="flex h-28 items-end gap-1.5">
+        {bars.map((b) => {
+          const px = b.value > 0 ? Math.max(8, (b.value / max) * 96) : 5;
+          const color = b.isToday
+            ? "var(--motiv)"
+            : b.has
+              ? "var(--accent)"
+              : "var(--surface-3)";
+          return (
+            <div key={b.date} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+              <div
+                className="w-full rounded-md transition-all"
+                style={{
+                  height: `${px}px`,
+                  background: color,
+                  opacity: b.has || b.isToday ? 1 : 0.5,
+                }}
+              />
+              <span
+                className="text-[8px] tabular-nums"
+                style={{ color: b.isToday ? "var(--motiv)" : "var(--muted)" }}
+              >
+                {b.date.slice(8)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 flex items-center gap-4 text-[10px] text-muted">
+        <Legend color="var(--accent)" label="Logged" />
+        <Legend color="var(--motiv)" label="Today" />
+        <Legend color="var(--surface-3)" label="No data" />
+      </div>
+    </div>
+  );
+}
+
+function Legend({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className="h-2 w-2 rounded-sm" style={{ background: color }} />
+      {label}
+    </span>
+  );
+}
+
+function RouteIcon({ color }: { color: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="19" r="2" />
+      <circle cx="18" cy="5" r="2" />
+      <path d="M8 19h6a4 4 0 000-8H10a4 4 0 010-8h6" />
+    </svg>
+  );
+}
+
+function PathIcon({ color }: { color: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 3c3 0 3 4 6 4s3-4 6-4M5 10c3 0 3 4 6 4s3-4 6-4M5 17c3 0 3 4 6 4s3-4 6-4" />
+    </svg>
+  );
+}
+
 /* ---------- Motivational comment (yellow, Box Box style) ---------- */
 function Motivation({
   message,
@@ -461,3 +681,4 @@ function Arrow() {
     </svg>
   );
 }
+void Arrow;
