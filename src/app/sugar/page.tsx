@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AppShell from "@/components/AppShell";
+import Collapsible from "@/components/Collapsible";
 import { NumberField, TextField } from "@/components/Inputs";
 import { useStore } from "@/lib/store";
 import type { SugarItem } from "@/lib/types";
@@ -90,10 +91,7 @@ function Sugar() {
       </div>
 
       {/* Quick add an item */}
-      <div className="card space-y-2 p-4">
-        <h2 className="text-xs font-bold uppercase tracking-widest">
-          Add a sugary item
-        </h2>
+      <Collapsible title="Add a sugary item" tint="var(--pink)" summary="Tap to add an item you eat often">
         <TextField label="Item" value={name} onChange={setName} placeholder="e.g. Cola can" />
         <div className="grid grid-cols-2 gap-2">
           <NumberField label="Sugar" value={grams} onChange={setGrams} unit="g" />
@@ -105,7 +103,7 @@ function Sugar() {
         >
           Save item
         </button>
-      </div>
+      </Collapsible>
 
       {/* Watch list */}
       <ItemList

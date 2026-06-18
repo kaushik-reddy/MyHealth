@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
+import Collapsible from "@/components/Collapsible";
 import { NumberField, Segmented, Stepper, TextField } from "@/components/Inputs";
 import { useStore } from "@/lib/store";
 import { stepsToKm, walkingCalories } from "@/lib/health";
@@ -57,7 +58,16 @@ function Checkin() {
         Saved ✓
       </div>
 
-      <Section title="Movement" tint="var(--accent-2)" delay={0}>
+      <Section
+        title="Movement"
+        tint="var(--accent-2)"
+        delay={0}
+        summary={
+          todayLog.steps || todayLog.active_calories
+            ? `${todayLog.steps.toLocaleString()} steps · ${todayLog.distance_km.toFixed(1)} km · ${Math.round(todayLog.active_calories)} kcal`
+            : "No movement logged yet — tap to add"
+        }
+      >
         <Stepper label="Steps" value={todayLog.steps} onChange={setSteps} step={500} max={60000} />
         <div className="grid grid-cols-2 gap-3">
           <NumberField
@@ -79,7 +89,16 @@ function Checkin() {
         </p>
       </Section>
 
-      <Section title="Hydration" tint="var(--purple)" delay={60}>
+      <Section
+        title="Hydration"
+        tint="var(--purple)"
+        delay={60}
+        summary={
+          todayLog.water_ml
+            ? `${todayLog.water_ml} ml of ${profile.daily_water_goal_ml} ml`
+            : "No water logged yet — tap to add"
+        }
+      >
         <div className="flex items-center justify-between">
           <span className="mono text-2xl font-bold">{todayLog.water_ml} ml</span>
           <div className="flex gap-2">
@@ -106,7 +125,16 @@ function Checkin() {
 
       <SpendSection />
 
-      <Section title="Weigh-in & mood" tint="var(--accent-3)" delay={180}>
+      <Section
+        title="Weigh-in & mood"
+        tint="var(--accent-3)"
+        delay={180}
+        summary={
+          todayLog.weight_kg
+            ? `${todayLog.weight_kg} kg${todayLog.mood ? ` · feeling ${todayLog.mood}` : ""}`
+            : "No weigh-in yet — tap to add"
+        }
+      >
         <WeightInput
           current={todayLog.weight_kg ?? profile.current_weight_kg}
           onSave={(kg) => addWeight(kg).then(flash)}
@@ -141,21 +169,27 @@ function Section({
   title,
   tint,
   delay = 0,
+  summary,
+  defaultOpen,
   children,
 }: {
   title: string;
   tint: string;
   delay?: number;
+  summary?: React.ReactNode;
+  defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="card rise-in p-4" style={{ animationDelay: `${delay}ms` }}>
-      <div className="mb-3 flex items-center gap-2">
-        <span className="h-3 w-1 rounded-full" style={{ background: tint }} />
-        <h2 className="text-xs font-bold uppercase tracking-widest">{title}</h2>
-      </div>
-      <div className="space-y-3">{children}</div>
-    </div>
+    <Collapsible
+      title={title}
+      tint={tint}
+      delay={delay}
+      summary={summary}
+      defaultOpen={defaultOpen}
+    >
+      {children}
+    </Collapsible>
   );
 }
 
@@ -214,7 +248,16 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
   );
 
   return (
-    <Section title="Food diary" tint="var(--accent)" delay={120}>
+    <Section
+      title="Food diary"
+      tint="var(--accent)"
+      delay={120}
+      summary={
+        foodsToday.length
+          ? `${foodsToday.length} item${foodsToday.length > 1 ? "s" : ""} · ${Math.round(totals.cal)} kcal · ${Math.round(totals.sugar * 10) / 10}g sugar`
+          : "No meals logged yet — tap to add"
+      }
+    >
       {/* meal selector applies to whatever you add */}
       <div>
         <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -651,7 +694,18 @@ function SpendSection() {
     .slice(0, 6);
 
   return (
-    <Section title="Eating-out spend" tint="#fc8019" delay={150}>
+    <Section
+      title="Eating-out spend"
+      tint="#fc8019"
+      delay={150}
+      summary={
+        todaySpend
+          ? `₹${Math.round(todaySpend)} today · ₹${Math.round(weekSpend)} this week`
+          : weekSpend
+            ? `₹${Math.round(weekSpend)} this week`
+            : "No outside food logged — tap to view"
+      }
+    >
       <div className="grid grid-cols-3 gap-2">
         <SpendStat label="Today" value={todaySpend} tint="var(--accent)" />
         <SpendStat label="7 days" value={weekSpend} tint="var(--accent-2)" />

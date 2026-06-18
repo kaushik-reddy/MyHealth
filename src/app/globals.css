@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
-/* ===== MyHealth — pitch-black theme with blue accents ===== */
+/* ===== MyHealth — all-black theme with blue accents ===== */
 :root {
   --background: #000000;
-  --surface: #0a0d14;
-  --surface-2: #10141f;
-  --surface-3: #181d2a;
+  --surface: #000000;
+  --surface-2: #050505;
+  --surface-3: #0d0d0f;
   --foreground: #eef3fb;
   --muted: #8a93a8;
-  --border: #1e2535;
+  --border: #1b1b22;
 
   --accent: #3b82f6;        /* primary blue */
   --accent-2: #38bdf8;      /* sky / cyan blue */
@@ -65,11 +65,9 @@ body {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 .card {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent) 0%, color-mix(in srgb, var(--surface-2) 88%, transparent) 100%);
+  background: #000000;
   border: 1px solid var(--border);
   border-radius: 1.1rem;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .speed-tab {

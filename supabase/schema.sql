@@ -8,6 +8,7 @@
 create table if not exists public.profiles (
   id                   uuid primary key references auth.users (id) on delete cascade,
   full_name            text,
+  avatar_url           text,
   sex                  text not null default 'male' check (sex in ('male','female')),
   age                  int  not null default 30,
   height_cm            numeric not null default 170,
@@ -117,6 +118,7 @@ alter table public.food_entries add column if not exists source text not null de
 alter table public.food_entries add column if not exists cost numeric not null default 0;
 alter table public.food_library add column if not exists default_source text;
 alter table public.food_library add column if not exists default_cost numeric not null default 0;
+alter table public.profiles add column if not exists avatar_url text;
 
 -- ============================================================
 --  Row Level Security — every table is private to its owner

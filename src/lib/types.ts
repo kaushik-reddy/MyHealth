@@ -12,6 +12,7 @@ export type GoalType = "lose" | "maintain" | "gain";
 export interface Profile {
   id: string;
   full_name: string | null;
+  avatar_url: string | null;
   sex: Sex;
   age: number;
   height_cm: number;

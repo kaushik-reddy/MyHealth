@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
-import { NumberField, Segmented, Stepper } from "@/components/Inputs";
+import Collapsible from "@/components/Collapsible";
+import { NumberField, Segmented, Stepper, TextField } from "@/components/Inputs";
 import { useStore } from "@/lib/store";
 import {
   ACTIVITY_LABELS,
@@ -33,6 +34,23 @@ function ProfileEditor() {
 
   const set = <K extends keyof Profile>(key: K, value: Profile[K]) =>
     setP({ ...p, [key]: value });
+
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onPickAvatar(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImage(file, 256);
+      const next = { ...p!, avatar_url: dataUrl };
+      setP(next);
+      await saveProfile(next); // persist immediately so the top-right avatar updates
+    } catch {
+      /* ignore unreadable image */
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   const goalType: GoalType =
     p.goal_weight_kg < p.current_weight_kg
@@ -66,10 +84,39 @@ function ProfileEditor() {
 
       {/* identity */}
       <div className="card p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-lg font-bold">{p.full_name || "You"}</p>
-            <p className="text-xs text-muted">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border border-border bg-surface-2"
+            aria-label="Change profile picture"
+          >
+            {p.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-lg font-bold text-muted">
+                {(p.full_name || "You")
+                  .split(" ")
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase()}
+              </span>
+            )}
+            <span className="absolute inset-x-0 bottom-0 bg-accent/80 py-0.5 text-center text-[8px] font-bold uppercase tracking-wide text-white">
+              Edit
+            </span>
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onPickAvatar}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-bold">{p.full_name || "You"}</p>
+            <p className="truncate text-xs text-muted">
               {demoMode ? "Demo mode · this device" : user?.email}
             </p>
           </div>
@@ -80,10 +127,21 @@ function ProfileEditor() {
             <p className="text-[10px] uppercase text-muted">{bmiCat.label} BMI</p>
           </div>
         </div>
+        <div className="mt-3">
+          <TextField
+            label="Display name"
+            value={p.full_name ?? ""}
+            onChange={(v) => set("full_name", v)}
+            placeholder="Your name"
+          />
+        </div>
       </div>
 
       {/* body */}
-      <Block title="Body">
+      <Block
+        title="Body"
+        summary={`${p.sex} · ${p.age} yrs · ${p.height_cm} cm · ${p.current_weight_kg} kg → ${p.goal_weight_kg} kg`}
+      >
         <div>
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
             Sex
@@ -122,7 +180,10 @@ function ProfileEditor() {
       </Block>
 
       {/* activity & pace */}
-      <Block title="Activity & pace">
+      <Block
+        title="Activity & pace"
+        summary={`${ACTIVITY_LABELS[p.activity_level]}${goalType !== "maintain" ? ` · ${p.weekly_rate_kg} kg/wk` : ""}`}
+      >
         <div className="space-y-2">
           {(Object.keys(ACTIVITY_LABELS) as ActivityLevel[]).map((a) => (
             <button
@@ -164,7 +225,10 @@ function ProfileEditor() {
       </Block>
 
       {/* daily targets */}
-      <Block title="Daily targets">
+      <Block
+        title="Daily targets"
+        summary={`${p.daily_calorie_target} kcal · ${p.daily_sugar_limit_g}g sugar · ${p.daily_step_goal.toLocaleString()} steps`}
+      >
         <div className="grid grid-cols-2 gap-2">
           <NumberField
             label="Calories"
@@ -219,11 +283,44 @@ function ProfileEditor() {
   );
 }
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
+function Block({
+  title,
+  summary,
+  children,
+}: {
+  title: string;
+  summary?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="card p-4">
-      <h2 className="mb-3 text-xs font-bold uppercase tracking-widest">{title}</h2>
-      <div className="space-y-3">{children}</div>
-    </div>
+    <Collapsible title={title} summary={summary}>
+      {children}
+    </Collapsible>
   );
+}
+
+/** Read an image file and downscale it to a small square-ish JPEG data URL. */
+function resizeImage(file: File, max: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("no canvas context"));
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }

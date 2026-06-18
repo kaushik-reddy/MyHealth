@@ -49,6 +49,7 @@ export default function OnboardingPage() {
     const p: Profile = {
       id: profile?.id ?? "local",
       full_name: name || null,
+      avatar_url: profile?.avatar_url ?? null,
       sex,
       age,
       height_cm: height,
