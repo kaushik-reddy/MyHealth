@@ -6,7 +6,15 @@ import { NumberField, Segmented, Stepper, TextField } from "@/components/Inputs"
 import { useStore } from "@/lib/store";
 import { stepsToKm, walkingCalories } from "@/lib/health";
 import { DEFAULT_FOODS } from "@/lib/foods";
-import type { FoodEntry, FoodLibraryItem } from "@/lib/types";
+import type { FoodEntry, FoodLibraryItem, FoodSource } from "@/lib/types";
+
+const SOURCE_META: Record<FoodSource, { label: string; tint: string }> = {
+  home: { label: "Home", tint: "var(--green)" },
+  swiggy: { label: "Swiggy", tint: "#fc8019" },
+  zomato: { label: "Zomato", tint: "#e23744" },
+  dinein: { label: "Dine-in", tint: "var(--accent-2)" },
+  other: { label: "Other", tint: "var(--muted)" },
+};
 
 export default function CheckinPage() {
   return (
@@ -96,6 +104,8 @@ function Checkin() {
 
       <FoodSection onSaved={flash} />
 
+      <SpendSection />
+
       <Section title="Weigh-in & mood" tint="var(--accent-3)" delay={180}>
         <WeightInput
           current={todayLog.weight_kg ?? profile.current_weight_kg}
@@ -169,7 +179,14 @@ function WeightInput({ current, onSave }: { current: number; onSave: (kg: number
 /* ---------- Food: remembered library + quantity picker ---------- */
 
 function FoodSection({ onSaved }: { onSaved: () => void }) {
-  const { foodsToday, foodLibrary, logLibraryFood, deleteFood, rememberFood } = useStore();
+  const {
+    foodsToday,
+    foodLibrary,
+    logLibraryFood,
+    deleteFood,
+    rememberFood,
+    deleteLibraryFood,
+  } = useStore();
   const [meal, setMeal] = useState<FoodEntry["meal_type"]>(currentMeal());
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
@@ -231,6 +248,18 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
                 {f.quantity && f.quantity !== 1 ? (
                   <span className="text-muted"> ×{f.quantity}</span>
                 ) : null}
+                {f.source && f.source !== "home" && (
+                  <span
+                    className="ml-2 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase"
+                    style={{
+                      background: `${SOURCE_META[f.source].tint}22`,
+                      color: SOURCE_META[f.source].tint,
+                    }}
+                  >
+                    {SOURCE_META[f.source].label}
+                    {f.cost ? ` ₹${Math.round(f.cost)}` : ""}
+                  </span>
+                )}
               </p>
               <p className="text-[11px] text-muted capitalize">
                 {f.meal_type} · {Math.round(f.calories)} kcal · {f.sugar_g}g sugar · {f.protein_g}g protein
@@ -267,7 +296,11 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
           <PickRow
             key={item.id ?? item.name}
             item={item}
-            onLog={(qty) => logLibraryFood(item, qty, meal).then(onSaved)}
+            onLog={(qty, opts) => logLibraryFood(item, qty, meal, opts).then(onSaved)}
+            onSaveEdit={(edited) => rememberFood(edited).then(() => onSaved())}
+            onForget={
+              item.id ? () => deleteLibraryFood(item.id!).then(onSaved) : undefined
+            }
           />
         ))}
       </div>
@@ -296,9 +329,25 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
   );
 }
 
-function PickRow({ item, onLog }: { item: FoodLibraryItem; onLog: (qty: number) => void }) {
+function PickRow({
+  item,
+  onLog,
+  onSaveEdit,
+  onForget,
+}: {
+  item: FoodLibraryItem;
+  onLog: (qty: number, opts?: { source?: FoodSource; cost?: number }) => void;
+  onSaveEdit: (edited: FoodLibraryItem) => void;
+  onForget?: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [qty, setQty] = useState(1);
+  const [out, setOut] = useState<boolean>(
+    !!item.default_source && item.default_source !== "home"
+  );
+  const [source, setSource] = useState<FoodSource>(item.default_source ?? "swiggy");
+  const [cost, setCost] = useState<number>(item.default_cost ?? 0);
 
   return (
     <div className="rounded-lg border border-border bg-surface-2">
@@ -314,6 +363,9 @@ function PickRow({ item, onLog }: { item: FoodLibraryItem; onLog: (qty: number) 
                 {item.times_used >= 3 ? "favourite" : "saved"}
               </span>
             )}
+            {item.category && (
+              <span className="ml-2 text-[10px] uppercase text-muted">{item.category}</span>
+            )}
           </p>
           <p className="text-[11px] text-muted">
             {item.serving_label} · {item.calories} kcal · {item.sugar_g}g sugar · {item.protein_g}g protein
@@ -322,18 +374,57 @@ function PickRow({ item, onLog }: { item: FoodLibraryItem; onLog: (qty: number) 
         <span className="ml-2 shrink-0 text-lg text-accent">{open ? "−" : "＋"}</span>
       </button>
 
-      {open && (
-        <div className="space-y-2 border-t border-border px-3 py-2.5">
+      {open && !editing && (
+        <div className="space-y-2.5 border-t border-border px-3 py-2.5">
           <QuantityStepper value={qty} onChange={setQty} />
+
+          {/* eat-out toggle */}
+          <button
+            onClick={() => setOut((o) => !o)}
+            className="flex w-full items-center justify-between rounded-md bg-surface-3 px-3 py-2 text-left"
+          >
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+              Ate out / ordered?
+            </span>
+            <span
+              className={`relative h-5 w-9 rounded-full transition ${
+                out ? "bg-accent" : "bg-border"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
+                  out ? "left-[18px]" : "left-0.5"
+                }`}
+              />
+            </span>
+          </button>
+
+          {out && (
+            <div className="space-y-2">
+              <Segmented
+                value={source}
+                onChange={setSource}
+                options={[
+                  { value: "swiggy", label: "Swiggy" },
+                  { value: "zomato", label: "Zomato" },
+                  { value: "dinein", label: "Dine-in" },
+                  { value: "other", label: "Other" },
+                ]}
+              />
+              <NumberField label="Amount spent" value={cost} onChange={setCost} unit="₹" />
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-2 text-[11px] text-muted">
             <span>
               = {Math.round(item.calories * qty)} kcal ·{" "}
               {Math.round(item.sugar_g * qty * 10) / 10}g sugar ·{" "}
               {Math.round(item.protein_g * qty * 10) / 10}g protein
+              {out && cost > 0 ? ` · ₹${Math.round(cost)}` : ""}
             </span>
             <button
               onClick={() => {
-                onLog(qty);
+                onLog(qty, out ? { source, cost } : { source: "home", cost: 0 });
                 setOpen(false);
                 setQty(1);
               }}
@@ -342,8 +433,90 @@ function PickRow({ item, onLog }: { item: FoodLibraryItem; onLog: (qty: number) 
               Add
             </button>
           </div>
+
+          <div className="flex items-center justify-between pt-0.5">
+            <button
+              onClick={() => setEditing(true)}
+              className="text-[11px] font-semibold uppercase tracking-wide text-accent-2"
+            >
+              ✎ Edit details
+            </button>
+            {onForget && (
+              <button
+                onClick={onForget}
+                className="text-[11px] font-semibold uppercase tracking-wide text-muted"
+              >
+                Forget
+              </button>
+            )}
+          </div>
         </div>
       )}
+
+      {open && editing && (
+        <EditFoodForm
+          item={item}
+          onCancel={() => setEditing(false)}
+          onSave={(edited) => {
+            onSaveEdit(edited);
+            setEditing(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditFoodForm({
+  item,
+  onCancel,
+  onSave,
+}: {
+  item: FoodLibraryItem;
+  onCancel: () => void;
+  onSave: (edited: FoodLibraryItem) => void;
+}) {
+  const [serving, setServing] = useState(item.serving_label);
+  const [cal, setCal] = useState(item.calories);
+  const [sugar, setSugar] = useState(item.sugar_g);
+  const [protein, setProtein] = useState(item.protein_g);
+  const [category, setCategory] = useState(item.category ?? "");
+
+  return (
+    <div className="space-y-2 border-t border-border px-3 py-2.5">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+        Edit “{item.name}” (per {serving || "serving"})
+      </p>
+      <TextField label="Serving" value={serving} onChange={setServing} placeholder="1 plate / 100 g" />
+      <div className="grid grid-cols-3 gap-2">
+        <NumberField label="kcal" value={cal} onChange={setCal} />
+        <NumberField label="sugar g" value={sugar} onChange={setSugar} />
+        <NumberField label="protein g" value={protein} onChange={setProtein} />
+      </div>
+      <TextField label="Category" value={category} onChange={setCategory} placeholder="South Indian" />
+      <div className="flex gap-2">
+        <button
+          onClick={onCancel}
+          className="flex-1 rounded-lg border border-border py-2 text-[11px] font-bold uppercase tracking-wide text-muted"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() =>
+            onSave({
+              ...item,
+              serving_label: serving.trim() || "1 serving",
+              calories: cal,
+              sugar_g: sugar,
+              protein_g: protein,
+              category: category.trim() || null,
+            })
+          }
+          className="flex-1 rounded-lg bg-accent py-2 text-[11px] font-bold uppercase tracking-wide text-[#0e1512] transition active:scale-[0.98]"
+        >
+          Save details
+        </button>
+      </div>
     </div>
   );
 }
@@ -437,4 +610,134 @@ function currentMeal(): FoodEntry["meal_type"] {
   if (h < 16) return "lunch";
   if (h < 21) return "dinner";
   return "snack";
+}
+
+/* ---------- Eating-out spend tracker ---------- */
+
+function SpendSection() {
+  const { recentFoods } = useStore();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 6);
+  const weekKey = weekAgo.toISOString().slice(0, 10);
+  const monthAgo = new Date();
+  monthAgo.setDate(monthAgo.getDate() - 29);
+  const monthKey = monthAgo.toISOString().slice(0, 10);
+
+  const outside = recentFoods.filter(
+    (f) => f.cost && f.cost > 0 && f.source && f.source !== "home"
+  );
+
+  const sum = (arr: FoodEntry[]) => arr.reduce((s, f) => s + (f.cost || 0), 0);
+  const todaySpend = sum(outside.filter((f) => f.log_date === today));
+  const weekSpend = sum(outside.filter((f) => f.log_date >= weekKey));
+  const monthSpend = sum(outside.filter((f) => f.log_date >= monthKey));
+
+  // breakdown by platform for the last 30 days
+  const byPlatform = (["swiggy", "zomato", "dinein", "other"] as FoodSource[]).map(
+    (src) => ({
+      src,
+      amount: sum(outside.filter((f) => f.log_date >= monthKey && f.source === src)),
+    })
+  );
+  const maxPlatform = Math.max(1, ...byPlatform.map((p) => p.amount));
+
+  const recent = outside
+    .slice()
+    .sort((a, b) =>
+      (b.created_at ?? b.log_date).localeCompare(a.created_at ?? a.log_date)
+    )
+    .slice(0, 6);
+
+  return (
+    <Section title="Eating-out spend" tint="#fc8019" delay={150}>
+      <div className="grid grid-cols-3 gap-2">
+        <SpendStat label="Today" value={todaySpend} tint="var(--accent)" />
+        <SpendStat label="7 days" value={weekSpend} tint="var(--accent-2)" />
+        <SpendStat label="30 days" value={monthSpend} tint="var(--accent-3)" />
+      </div>
+
+      {monthSpend > 0 ? (
+        <>
+          <div className="space-y-2 pt-1">
+            {byPlatform
+              .filter((p) => p.amount > 0)
+              .map((p) => (
+                <div key={p.src} className="flex items-center gap-3">
+                  <span
+                    className="w-16 shrink-0 text-[11px] font-semibold uppercase"
+                    style={{ color: SOURCE_META[p.src].tint }}
+                  >
+                    {SOURCE_META[p.src].label}
+                  </span>
+                  <div className="tower-bar flex-1">
+                    <div
+                      className="tower-fill"
+                      style={{
+                        width: `${(p.amount / maxPlatform) * 100}%`,
+                        background: SOURCE_META[p.src].tint,
+                      }}
+                    />
+                  </div>
+                  <span className="mono w-16 shrink-0 text-right text-xs font-bold">
+                    ₹{Math.round(p.amount)}
+                  </span>
+                </div>
+              ))}
+          </div>
+
+          <div className="space-y-1.5 pt-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+              Recent orders
+            </p>
+            {recent.map((f) => (
+              <div
+                key={f.id}
+                className="flex items-center justify-between border-b border-border/50 py-1.5 text-xs last:border-0"
+              >
+                <span className="min-w-0 truncate">
+                  <span
+                    className="mr-2 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase"
+                    style={{
+                      background: `${SOURCE_META[f.source!].tint}22`,
+                      color: SOURCE_META[f.source!].tint,
+                    }}
+                  >
+                    {SOURCE_META[f.source!].label}
+                  </span>
+                  {f.name}
+                </span>
+                <span className="mono shrink-0 font-bold">₹{Math.round(f.cost!)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="text-xs text-muted">
+          When you add a food and toggle “Ate out / ordered?”, the bill amount shows up
+          here — split by Swiggy, Zomato and dine-in.
+        </p>
+      )}
+    </Section>
+  );
+}
+
+function SpendStat({
+  label,
+  value,
+  tint,
+}: {
+  label: string;
+  value: number;
+  tint: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-surface-2 p-2.5 text-center">
+      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
+      <p className="mono text-lg font-black" style={{ color: tint }}>
+        ₹{Math.round(value)}
+      </p>
+    </div>
+  );
 }

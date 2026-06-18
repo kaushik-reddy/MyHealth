@@ -60,6 +60,10 @@ export class LocalRepo implements Repo {
     const all = read<FoodEntry[]>(KEYS.foods, []);
     return all.filter((f) => f.log_date === date);
   }
+  async getFoodsSince(date: string) {
+    const all = read<FoodEntry[]>(KEYS.foods, []);
+    return all.filter((f) => f.log_date >= date);
+  }
   async addFood(food: FoodEntry) {
     const all = read<FoodEntry[]>(KEYS.foods, []);
     const withId = { ...food, id: food.id ?? uid() };

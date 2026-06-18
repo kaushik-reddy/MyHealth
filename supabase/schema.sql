@@ -57,6 +57,8 @@ create table if not exists public.food_entries (
   protein_g  numeric not null default 0,
   quantity      numeric not null default 1,
   serving_label text,
+  source        text not null default 'home' check (source in ('home','swiggy','zomato','dinein','other')),
+  cost          numeric not null default 0,
   created_at timestamptz not null default now()
 );
 
@@ -71,6 +73,8 @@ create table if not exists public.food_library (
   protein_g     numeric not null default 0,
   category      text,
   times_used    int not null default 0,
+  default_source text,
+  default_cost   numeric not null default 0,
   created_at    timestamptz not null default now(),
   unique (user_id, name)
 );
@@ -103,6 +107,16 @@ create index if not exists idx_food_entries_user_date on public.food_entries (us
 create index if not exists idx_food_library_user on public.food_library (user_id, times_used desc);
 create index if not exists idx_sugar_items_user on public.sugar_items (user_id);
 create index if not exists idx_weight_entries_user on public.weight_entries (user_id, entry_date);
+
+-- ============================================================
+--  Idempotent migrations (safe to re-run on existing databases)
+-- ============================================================
+alter table public.food_entries add column if not exists quantity numeric not null default 1;
+alter table public.food_entries add column if not exists serving_label text;
+alter table public.food_entries add column if not exists source text not null default 'home';
+alter table public.food_entries add column if not exists cost numeric not null default 0;
+alter table public.food_library add column if not exists default_source text;
+alter table public.food_library add column if not exists default_cost numeric not null default 0;
 
 -- ============================================================
 --  Row Level Security — every table is private to its owner

@@ -46,6 +46,8 @@ export interface DailyLog {
   notes: string | null;
 }
 
+export type FoodSource = "home" | "swiggy" | "zomato" | "dinein" | "other";
+
 export interface FoodEntry {
   id?: string;
   user_id?: string;
@@ -57,6 +59,8 @@ export interface FoodEntry {
   protein_g: number;
   quantity?: number;
   serving_label?: string | null;
+  source?: FoodSource;
+  cost?: number; // money spent (₹) — for outside orders / dine-in
   created_at?: string;
 }
 
@@ -71,6 +75,8 @@ export interface FoodLibraryItem {
   protein_g: number;
   category: string | null;
   times_used: number;
+  default_source?: FoodSource; // outside items default to a delivery/dine-in source
+  default_cost?: number; // typical price to pre-fill the spend field
   created_at?: string;
 }
 

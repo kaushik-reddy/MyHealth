@@ -31,6 +31,7 @@ interface StoreState {
   profile: Profile | null;
   logs: DailyLog[];
   foodsToday: FoodEntry[];
+  recentFoods: FoodEntry[];
   foodLibrary: FoodLibraryItem[];
   sugarItems: SugarItem[];
   weights: WeightEntry[];
@@ -44,7 +45,8 @@ interface StoreState {
   logLibraryFood: (
     item: FoodLibraryItem,
     quantity: number,
-    meal: FoodEntry["meal_type"]
+    meal: FoodEntry["meal_type"],
+    opts?: { source?: FoodEntry["source"]; cost?: number }
   ) => Promise<void>;
   deleteLibraryFood: (id: string) => Promise<void>;
   upsertSugarItem: (item: SugarItem) => Promise<void>;
@@ -69,6 +71,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [foodsToday, setFoodsToday] = useState<FoodEntry[]>([]);
+  const [recentFoods, setRecentFoods] = useState<FoodEntry[]>([]);
   const [foodLibrary, setFoodLibrary] = useState<FoodLibraryItem[]>([]);
   const [sugarItems, setSugarItems] = useState<SugarItem[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
@@ -79,10 +82,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const loadAll = useCallback(async () => {
     const repo = repoRef.current;
     const today = todayKey();
-    const [p, lg, fd, lib, sg, wt] = await Promise.all([
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+    const sinceKey = since.toISOString().slice(0, 10);
+    const [p, lg, fd, rf, lib, sg, wt] = await Promise.all([
       repo.getProfile(),
       repo.getLogs(),
       repo.getFoods(today),
+      repo.getFoodsSince(sinceKey),
       repo.getFoodLibrary(),
       repo.getSugarItems(),
       repo.getWeights(),
@@ -90,6 +97,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setProfile(p);
     setLogs(lg);
     setFoodsToday(fd);
+    setRecentFoods(rf);
     setFoodLibrary(lib);
     setSugarItems(sg);
     setWeights(wt);
@@ -173,6 +181,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const saved = await repoRef.current.addFood(entry);
       const next = [...foodsToday, saved];
       setFoodsToday(next);
+      setRecentFoods((prev) => [...prev, saved]);
       await recalcFoodTotals(next);
     },
     [foodsToday, today, recalcFoodTotals]
@@ -183,6 +192,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await repoRef.current.deleteFood(id);
       const next = foodsToday.filter((f) => f.id !== id);
       setFoodsToday(next);
+      setRecentFoods((prev) => prev.filter((f) => f.id !== id));
       await recalcFoodTotals(next);
     },
     [foodsToday, recalcFoodTotals]
@@ -205,7 +215,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     async (
       item: FoodLibraryItem,
       quantity: number,
-      meal: FoodEntry["meal_type"]
+      meal: FoodEntry["meal_type"],
+      opts?: { source?: FoodEntry["source"]; cost?: number }
     ) => {
       const q = Math.max(0.25, quantity);
       await addFood({
@@ -216,6 +227,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         protein_g: Math.round(item.protein_g * q * 10) / 10,
         quantity: q,
         serving_label: item.serving_label,
+        source: opts?.source ?? "home",
+        cost: opts?.cost ? Math.round(opts.cost * 100) / 100 : 0,
       });
       await rememberFood({
         ...item,
@@ -295,6 +308,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     profile,
     logs,
     foodsToday,
+    recentFoods,
     foodLibrary,
     sugarItems,
     weights,

@@ -68,6 +68,16 @@ export class SupabaseRepo implements Repo {
     return (data as FoodEntry[]) ?? [];
   }
 
+  async getFoodsSince(date: string) {
+    const { data } = await this.sb
+      .from("food_entries")
+      .select("*")
+      .eq("user_id", this.userId)
+      .gte("log_date", date)
+      .order("log_date", { ascending: true });
+    return (data as FoodEntry[]) ?? [];
+  }
+
   async addFood(food: FoodEntry) {
     const row = { ...food, user_id: this.userId };
     const { data, error } = await this.sb

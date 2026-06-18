@@ -16,6 +16,7 @@ export interface Repo {
   saveLog(log: DailyLog): Promise<void>;
 
   getFoods(date: string): Promise<FoodEntry[]>;
+  getFoodsSince(date: string): Promise<FoodEntry[]>;
   addFood(food: FoodEntry): Promise<FoodEntry>;
   deleteFood(id: string): Promise<void>;
 
