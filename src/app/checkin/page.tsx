@@ -14,7 +14,6 @@ import {
   ChevronRight,
   CloseIcon,
   EditIcon,
-  CheckIcon,
   SugarIcon,
   PlusIcon,
   MOODS,
@@ -68,7 +67,7 @@ function Checkin() {
 
   const flash = () => {
     setSaved(true);
-    setTimeout(() => setSaved(false), 1100);
+    setTimeout(() => setSaved(false), 1600);
   };
 
   async function setSteps(steps: number) {
@@ -84,13 +83,46 @@ function Checkin() {
 
   return (
     <div className="space-y-5">
-      {/* smooth floating toast */}
+      {/* centered success animation */}
       <div
-        className={`pointer-events-none fixed left-1/2 top-16 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-green/40 bg-green/15 px-4 py-1.5 text-xs font-semibold text-green backdrop-blur transition-all duration-300 ${
-          saved ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-0"
+        className={`pointer-events-none fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${
+          saved ? "opacity-100" : "opacity-0"
         }`}
       >
-        <CheckIcon size={14} /> Saved
+        {saved && (
+          <div className="success-pop flex flex-col items-center gap-3 rounded-3xl border border-green/30 bg-black/70 px-9 py-8 backdrop-blur-xl">
+            <span
+              className="flex h-20 w-20 items-center justify-center rounded-full"
+              style={{
+                background: "rgba(52,211,153,0.14)",
+                boxShadow: "0 0 30px rgba(52,211,153,0.5)",
+              }}
+            >
+              <svg width={52} height={52} viewBox="0 0 24 24" fill="none">
+                <circle
+                  className="tick-ring"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#34d399"
+                  strokeWidth="1.6"
+                  strokeOpacity="0.4"
+                />
+                <path
+                  className="tick-draw"
+                  d="M5 12.5l4.2 4.2L19 7"
+                  stroke="#34d399"
+                  strokeWidth={2.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="text-sm font-bold uppercase tracking-[0.18em] text-green">
+              Saved
+            </span>
+          </div>
+        )}
       </div>
 
       <DayNav date={selectedDate} onChange={setSelectedDate} />

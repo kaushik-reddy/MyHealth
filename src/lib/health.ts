@@ -1,4 +1,4 @@
-import type { ActivityLevel, GoalType, Profile, Sex } from "./types";
+import type { ActivityLevel, DailyLog, GoalType, Profile, Sex } from "./types";
 
 /** Energy density of body fat: ~7700 kcal per kg. */
 export const KCAL_PER_KG = 7700;
@@ -166,4 +166,55 @@ export function shiftKey(key: string, days: number) {
   const dt = new Date(y, m - 1, d);
   dt.setDate(dt.getDate() + days);
   return dateKey(dt);
+}
+
+type DayGoals = Pick<
+  Profile,
+  | "daily_calorie_target"
+  | "daily_step_goal"
+  | "daily_protein_goal_g"
+  | "daily_water_goal_ml"
+  | "daily_sugar_limit_g"
+>;
+
+/**
+ * Overall daily completion across the five tracked goals (0..1).
+ * Calories/steps/protein/water count toward their target; sugar rewards
+ * staying under the limit. Returns 0 when nothing has been logged.
+ */
+export function dayProgress(
+  log: DailyLog | undefined,
+  goals: DayGoals
+): number {
+  if (!log) return 0;
+  const anyLogged =
+    log.calories_intake > 0 ||
+    log.steps > 0 ||
+    log.protein_g > 0 ||
+    log.water_ml > 0 ||
+    log.sugar_g > 0;
+  if (!anyLogged) return 0;
+
+  const ratio = (value: number, max: number) =>
+    max > 0 ? Math.min(value / max, 1) : 0;
+  const invert = (value: number, max: number) =>
+    max > 0 ? (value <= max ? 1 : Math.max(0, max / value)) : 0;
+
+  const parts = [
+    ratio(log.calories_intake, goals.daily_calorie_target),
+    ratio(log.steps, goals.daily_step_goal),
+    ratio(log.protein_g, goals.daily_protein_goal_g),
+    ratio(log.water_ml, goals.daily_water_goal_ml),
+    invert(log.sugar_g, goals.daily_sugar_limit_g),
+  ];
+  return parts.reduce((s, p) => s + p, 0) / parts.length;
+}
+
+/** Color for a 0..1 progress value — green when complete, warmer as it drops. */
+export function progressColor(pct: number): string {
+  if (pct >= 1) return "#34d399"; // green — achieved
+  if (pct >= 0.75) return "#38bdf8"; // sky blue
+  if (pct >= 0.5) return "#3b82f6"; // blue
+  if (pct >= 0.25) return "#facc15"; // amber
+  return "#fb7185"; // rose — just getting started
 }

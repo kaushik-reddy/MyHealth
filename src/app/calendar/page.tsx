@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import { useStore } from "@/lib/store";
-import { tdee, todayKey } from "@/lib/health";
+import { dayProgress, progressColor, tdee, todayKey } from "@/lib/health";
 import type { DailyLog, MoodEntry } from "@/lib/types";
 import {
   MealIcon,
@@ -106,28 +106,27 @@ function CalendarView() {
           {cells.map((key, i) => {
             if (!key) return <div key={i} />;
             const log = logByDate.get(key);
-            const active = !!log && (log.calories_intake || log.steps || log.water_ml);
             const isToday = key === today;
             const isSel = key === selected;
             const future = key > today;
             const dayNum = Number(key.slice(8));
+            const pct = dayProgress(log, profile);
             return (
               <button
                 key={key}
                 disabled={future}
                 onClick={() => setSelected(key)}
-                className={`relative flex aspect-square flex-col items-center justify-center rounded-lg border text-xs transition ${
+                className={`relative flex aspect-square items-center justify-center rounded-lg border transition ${
                   isSel
                     ? "border-accent bg-accent/15"
-                    : "border-border bg-surface-2"
+                    : "border-transparent"
                 } ${future ? "opacity-25" : "active:scale-95"}`}
               >
-                <span className={`mono ${isToday ? "font-black text-accent" : "font-semibold"}`}>
-                  {dayNum}
-                </span>
-                <span
-                  className="mt-0.5 h-1.5 w-1.5 rounded-full"
-                  style={{ background: active ? "var(--accent-2)" : "transparent" }}
+                <DayRing
+                  pct={pct}
+                  num={dayNum}
+                  isToday={isToday}
+                  complete={pct >= 1}
                 />
               </button>
             );
@@ -152,6 +151,79 @@ function CalendarView() {
         waterGoal={profile.daily_water_goal_ml}
         sugarLimit={profile.daily_sugar_limit_g}
       />
+    </div>
+  );
+}
+
+function DayRing({
+  pct,
+  num,
+  isToday,
+  complete,
+}: {
+  pct: number;
+  num: number;
+  isToday: boolean;
+  complete: boolean;
+}) {
+  const size = 38;
+  const stroke = 3;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const clamped = Math.min(Math.max(pct, 0), 1);
+  const offset = c * (1 - clamped);
+  const color = progressColor(clamped);
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="var(--surface-3)"
+          strokeWidth={stroke}
+        />
+        {clamped > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={c}
+            strokeDashoffset={offset}
+            style={{
+              transition: "stroke-dashoffset 0.6s cubic-bezier(0.22,1,0.36,1)",
+              filter: complete ? `drop-shadow(0 0 4px ${color})` : "none",
+            }}
+          />
+        )}
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        {complete ? (
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 13l4 4L19 7"
+              stroke="#34d399"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ) : (
+          <span
+            className={`mono text-xs ${
+              isToday ? "font-black text-accent" : "font-semibold text-foreground"
+            }`}
+          >
+            {num}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

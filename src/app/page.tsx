@@ -324,14 +324,15 @@ function HeroRing({
   const c = 2 * Math.PI * r;
   const clamped = Math.min(Math.max(pct, 0), 1);
   const offset = c * (1 - clamped);
+  const complete = clamped >= 1;
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#38bdf8" />
+            <stop offset="0%" stopColor={complete ? "#34d399" : "#3b82f6"} />
+            <stop offset="100%" stopColor={complete ? "#10b981" : "#38bdf8"} />
           </linearGradient>
         </defs>
         <circle
@@ -354,20 +355,49 @@ function HeroRing({
           strokeDashoffset={offset}
           style={{
             transition: "stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1)",
+            filter: complete ? "drop-shadow(0 0 10px rgba(52,211,153,0.7))" : "none",
           }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="display text-6xl font-light">
-          {Math.round(clamped * 100)}
-          <span className="text-2xl text-muted">%</span>
-        </span>
-        <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted">
-          day complete
-        </span>
-        <span className="mt-2 text-xs text-muted">
-          {Math.round(calories).toLocaleString()} / {target.toLocaleString()} kcal
-        </span>
+        {complete ? (
+          <div className="success-pop flex flex-col items-center">
+            <span
+              className="flex h-20 w-20 items-center justify-center rounded-full"
+              style={{
+                background: "rgba(52,211,153,0.12)",
+                boxShadow: "0 0 28px rgba(52,211,153,0.45)",
+              }}
+            >
+              <svg width={48} height={48} viewBox="0 0 24 24" fill="none">
+                <path
+                  className="tick-draw"
+                  d="M5 13l4 4L19 7"
+                  stroke="#34d399"
+                  strokeWidth={2.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-green">
+              All goals met
+            </span>
+          </div>
+        ) : (
+          <>
+            <span className="display text-6xl font-light">
+              {Math.round(clamped * 100)}
+              <span className="text-2xl text-muted">%</span>
+            </span>
+            <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted">
+              day complete
+            </span>
+            <span className="mt-2 text-xs text-muted">
+              {Math.round(calories).toLocaleString()} / {target.toLocaleString()} kcal
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
