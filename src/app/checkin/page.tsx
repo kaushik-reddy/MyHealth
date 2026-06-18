@@ -6,7 +6,7 @@ import AppShell from "@/components/AppShell";
 import Collapsible from "@/components/Collapsible";
 import { NumberField, Segmented, Stepper, TextField } from "@/components/Inputs";
 import { useStore } from "@/lib/store";
-import { stepsToKm, walkingCalories, todayKey, shiftKey, dateKey } from "@/lib/health";
+import { stepsToKm, walkingCalories, todayKey, shiftKey } from "@/lib/health";
 import { DEFAULT_FOODS } from "@/lib/foods";
 import type { FoodEntry, FoodLibraryItem, FoodSource, MoodEntry } from "@/lib/types";
 import {
@@ -965,40 +965,47 @@ function currentMeal(): FoodEntry["meal_type"] {
 /* ---------- Eating-out spend tracker ---------- */
 
 function SpendSection() {
-  const { recentFoods } = useStore();
-  const today = todayKey();
+  const { recentFoods, selectedDate } = useStore();
+  const day = selectedDate;
 
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 6);
-  const weekKey = dateKey(weekAgo);
-  const monthAgo = new Date();
-  monthAgo.setDate(monthAgo.getDate() - 29);
-  const monthKey = dateKey(monthAgo);
+  const weekKey = shiftKey(day, -6);
+  const monthKey = shiftKey(day, -29);
 
   const outside = recentFoods.filter(
     (f) => f.cost && f.cost > 0 && f.source && f.source !== "home"
   );
 
   const sum = (arr: FoodEntry[]) => arr.reduce((s, f) => s + (f.cost || 0), 0);
-  const todaySpend = sum(outside.filter((f) => f.log_date === today));
-  const weekSpend = sum(outside.filter((f) => f.log_date >= weekKey));
-  const monthSpend = sum(outside.filter((f) => f.log_date >= monthKey));
+  const todaySpend = sum(outside.filter((f) => f.log_date === day));
+  const weekSpend = sum(
+    outside.filter((f) => f.log_date >= weekKey && f.log_date <= day)
+  );
+  const monthSpend = sum(
+    outside.filter((f) => f.log_date >= monthKey && f.log_date <= day)
+  );
 
-  // breakdown by platform for the last 30 days
+  // breakdown by platform for the trailing 30 days up to the selected day
   const byPlatform = (["swiggy", "zomato", "dinein", "other"] as FoodSource[]).map(
     (src) => ({
       src,
-      amount: sum(outside.filter((f) => f.log_date >= monthKey && f.source === src)),
+      amount: sum(
+        outside.filter(
+          (f) =>
+            f.log_date >= monthKey && f.log_date <= day && f.source === src
+        )
+      ),
     })
   );
   const maxPlatform = Math.max(1, ...byPlatform.map((p) => p.amount));
 
   const recent = outside
-    .slice()
+    .filter((f) => f.log_date <= day)
     .sort((a, b) =>
       (b.created_at ?? b.log_date).localeCompare(a.created_at ?? a.log_date)
     )
     .slice(0, 6);
+
+  const isToday = day === todayKey();
 
   return (
     <Section
@@ -1007,14 +1014,14 @@ function SpendSection() {
       delay={150}
       summary={
         todaySpend
-          ? `₹${Math.round(todaySpend)} today · ₹${Math.round(weekSpend)} this week`
+          ? `₹${Math.round(todaySpend)} ${isToday ? "today" : "this day"} · ₹${Math.round(weekSpend)} this week`
           : weekSpend
             ? `₹${Math.round(weekSpend)} this week`
             : "No outside food logged — tap to view"
       }
     >
       <div className="grid grid-cols-3 gap-2">
-        <SpendStat label="Today" value={todaySpend} tint="var(--accent)" />
+        <SpendStat label={isToday ? "Today" : "This day"} value={todaySpend} tint="var(--accent)" />
         <SpendStat label="7 days" value={weekSpend} tint="var(--accent-2)" />
         <SpendStat label="30 days" value={monthSpend} tint="var(--accent-3)" />
       </div>
