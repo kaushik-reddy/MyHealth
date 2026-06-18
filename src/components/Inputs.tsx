@@ -10,14 +10,16 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex rounded-lg border border-border bg-surface-2 p-1">
+    <div className="flex gap-1 rounded-2xl bg-surface-3 p-1">
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
-          className={`flex-1 rounded-md py-2 text-xs font-bold uppercase tracking-wide transition ${
-            value === o.value ? "bg-accent text-white" : "text-muted"
+          className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition ${
+            value === o.value
+              ? "bg-accent text-white shadow"
+              : "text-muted active:scale-95"
           }`}
         >
           {o.label}
@@ -44,33 +46,32 @@ export function Stepper({
   max?: number;
   unit?: string;
 }) {
-  const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v * 100) / 100));
+  const clamp = (v: number) =>
+    Math.min(max, Math.max(min, Math.round(v * 100) / 100));
   return (
     <div>
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </span>
-      <div className="flex items-center gap-2">
+      <span className="field-label">{label}</span>
+      <div className="flex items-center gap-2.5">
         <button
           type="button"
           onClick={() => onChange(clamp(value - step))}
-          className="h-11 w-11 shrink-0 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-3 text-xl font-bold text-muted active:scale-90"
         >
           −
         </button>
-        <div className="flex flex-1 items-baseline justify-center gap-1 rounded-lg border border-border bg-surface-2 py-2.5">
+        <div className="field flex flex-1 items-baseline justify-center gap-1 py-3">
           <input
             inputMode="decimal"
             value={value}
             onChange={(e) => onChange(clamp(Number(e.target.value) || 0))}
-            className="mono w-20 bg-transparent text-center text-lg font-bold outline-none"
+            className="display w-24 bg-transparent text-center text-xl font-light outline-none"
           />
           {unit && <span className="text-xs text-muted">{unit}</span>}
         </div>
         <button
           type="button"
           onClick={() => onChange(clamp(value + step))}
-          className="h-11 w-11 shrink-0 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-xl font-bold text-white active:scale-90"
         >
           +
         </button>
@@ -94,18 +95,16 @@ export function NumberField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </span>
-      <div className="flex items-center rounded-lg border border-border bg-surface-2 px-3">
+      <span className="field-label">{label}</span>
+      <div className="field flex items-center px-3.5">
         <input
           inputMode="decimal"
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(Number(e.target.value) || 0)}
-          className="mono w-full bg-transparent py-2.5 text-sm outline-none"
+          className="display w-full bg-transparent py-3 text-base font-light outline-none"
         />
-        {unit && <span className="text-xs text-muted">{unit}</span>}
+        {unit && <span className="ml-1 text-xs text-muted">{unit}</span>}
       </div>
     </label>
   );
@@ -124,15 +123,15 @@ export function TextField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </span>
-      <input
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm outline-none focus:border-accent"
-      />
+      <span className="field-label">{label}</span>
+      <div className="field flex items-center px-3.5">
+        <input
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-transparent py-3 text-sm outline-none"
+        />
+      </div>
     </label>
   );
 }

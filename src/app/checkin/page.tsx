@@ -117,20 +117,23 @@ function Checkin() {
         }
       >
         <div className="flex items-center justify-between">
-          <span className="mono text-2xl font-bold">{dayLog.water_ml} ml</span>
+          <span className="display text-3xl font-light">
+            {dayLog.water_ml}
+            <span className="ml-1 text-sm text-muted">ml</span>
+          </span>
           <div className="flex gap-2">
             {[250, 500].map((ml) => (
               <button
                 key={ml}
                 onClick={() => updateTodayLog({ water_ml: dayLog.water_ml + ml }).then(flash)}
-                className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-bold transition active:scale-95"
+                className="rounded-xl bg-surface-3 px-4 py-2.5 text-sm font-bold transition active:scale-95"
               >
                 +{ml}
               </button>
             ))}
             <button
               onClick={() => updateTodayLog({ water_ml: 0 }).then(flash)}
-              className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-bold text-muted transition active:scale-95"
+              className="rounded-xl bg-surface-3 px-3 py-2.5 text-sm font-bold text-muted transition active:scale-95"
             >
               Reset
             </button>
@@ -157,9 +160,7 @@ function Checkin() {
           onSave={(kg) => addWeight(kg).then(flash)}
         />
         <div>
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Mood
-          </span>
+          <span className="field-label">Mood</span>
           <Segmented
             value={dayLog.mood ?? "ok"}
             onChange={(m) => updateTodayLog({ mood: m }).then(flash)}
@@ -270,13 +271,13 @@ function Section({
 function WeightInput({ current, onSave }: { current: number; onSave: (kg: number) => void }) {
   const [kg, setKg] = useState(current);
   return (
-    <div className="flex items-end gap-2">
+    <div className="flex items-end gap-2.5">
       <div className="flex-1">
-        <NumberField label="Today's weight" value={kg} onChange={setKg} unit="kg" />
+        <NumberField label="Weight" value={kg} onChange={setKg} unit="kg" />
       </div>
       <button
         onClick={() => onSave(kg)}
-        className="rounded-lg bg-accent px-4 py-2.5 text-xs font-bold uppercase text-white transition active:scale-95"
+        className="rounded-xl bg-accent px-5 py-3 text-sm font-bold uppercase text-white transition active:scale-95"
       >
         Log
       </button>
@@ -334,9 +335,7 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
     >
       {/* meal selector applies to whatever you add */}
       <div>
-        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
-          Adding to
-        </span>
+        <span className="field-label">Adding to</span>
         <Segmented
           value={meal}
           onChange={setMeal}
@@ -357,10 +356,10 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
         {foodsToday.map((f) => (
           <div
             key={f.id}
-            className="flex items-center justify-between rounded-lg border border-border bg-surface-2 px-3 py-2"
+            className="flex items-center justify-between rounded-2xl bg-surface-3 px-4 py-3"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">
+              <p className="truncate text-sm font-semibold">
                 {f.name}
                 {f.quantity && f.quantity !== 1 ? (
                   <span className="text-muted"> ×{f.quantity}</span>
@@ -378,13 +377,13 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
                   </span>
                 )}
               </p>
-              <p className="text-[11px] text-muted capitalize">
+              <p className="mt-0.5 text-[11px] text-muted capitalize">
                 {f.meal_type} · {Math.round(f.calories)} kcal · {f.sugar_g}g sugar · {f.protein_g}g protein
               </p>
             </div>
             <button
               onClick={() => f.id && deleteFood(f.id).then(onSaved)}
-              className="ml-2 shrink-0 text-muted transition active:scale-90"
+              className="ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted transition active:scale-90"
               aria-label="Delete"
             >
               ✕
@@ -394,7 +393,7 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
       </div>
 
       {foodsToday.length > 0 && (
-        <p className="text-[11px] text-muted">
+        <p className="px-1 text-[11px] text-muted">
           Total: {Math.round(totals.cal)} kcal · {Math.round(totals.sugar * 10) / 10}g sugar ·{" "}
           {Math.round(totals.protein)}g protein
         </p>
@@ -437,7 +436,7 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
       ) : (
         <button
           onClick={() => setCreating(true)}
-          className="w-full rounded-lg border border-dashed border-border py-2.5 text-xs font-bold uppercase tracking-wide text-muted transition active:scale-[0.98]"
+          className="w-full rounded-2xl border border-dashed border-border py-3 text-xs font-bold uppercase tracking-wide text-muted transition active:scale-[0.98]"
         >
           ＋ New food
         </button>
@@ -467,40 +466,42 @@ function PickRow({
   const [cost, setCost] = useState<number>(item.default_cost ?? 0);
 
   return (
-    <div className="rounded-lg border border-border bg-surface-2">
+    <div className="overflow-hidden rounded-2xl bg-surface-3">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-left"
+        className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">
+          <p className="truncate text-sm font-semibold">
             {item.name}
             {item.times_used > 0 && (
               <span className="ml-2 text-[10px] font-bold uppercase text-accent-3">
                 {item.times_used >= 3 ? "favourite" : "saved"}
               </span>
             )}
-            {item.category && (
-              <span className="ml-2 text-[10px] uppercase text-muted">{item.category}</span>
-            )}
           </p>
-          <p className="text-[11px] text-muted">
+          <p className="mt-0.5 text-[11px] text-muted">
             {item.serving_label} · {item.calories} kcal · {item.sugar_g}g sugar · {item.protein_g}g protein
           </p>
         </div>
-        <span className="ml-2 shrink-0 text-lg text-accent">{open ? "−" : "＋"}</span>
+        <span
+          className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-lg text-accent transition"
+          style={{ transform: open ? "rotate(45deg)" : "none" }}
+        >
+          ＋
+        </span>
       </button>
 
       {open && !editing && (
-        <div className="space-y-2.5 border-t border-border px-3 py-2.5">
+        <div className="space-y-3 px-4 pb-4">
           <QuantityStepper value={qty} onChange={setQty} />
 
           {/* eat-out toggle */}
           <button
             onClick={() => setOut((o) => !o)}
-            className="flex w-full items-center justify-between rounded-md bg-surface-3 px-3 py-2 text-left"
+            className="flex w-full items-center justify-between rounded-xl bg-surface-2 px-4 py-3 text-left"
           >
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            <span className="text-xs font-semibold text-muted">
               Ate out / ordered?
             </span>
             <span
@@ -517,7 +518,7 @@ function PickRow({
           </button>
 
           {out && (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <Segmented
                 value={source}
                 onChange={setSource}
@@ -532,36 +533,34 @@ function PickRow({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-2 text-[11px] text-muted">
-            <span>
-              = {Math.round(item.calories * qty)} kcal ·{" "}
-              {Math.round(item.sugar_g * qty * 10) / 10}g sugar ·{" "}
-              {Math.round(item.protein_g * qty * 10) / 10}g protein
-              {out && cost > 0 ? ` · ₹${Math.round(cost)}` : ""}
-            </span>
-            <button
-              onClick={() => {
-                onLog(qty, out ? { source, cost } : { source: "home", cost: 0 });
-                setOpen(false);
-                setQty(1);
-              }}
-              className="shrink-0 rounded-md bg-accent px-3 py-1.5 text-[11px] font-bold uppercase text-white transition active:scale-95"
-            >
-              Add
-            </button>
-          </div>
+          <p className="text-[11px] text-muted">
+            = {Math.round(item.calories * qty)} kcal ·{" "}
+            {Math.round(item.sugar_g * qty * 10) / 10}g sugar ·{" "}
+            {Math.round(item.protein_g * qty * 10) / 10}g protein
+            {out && cost > 0 ? ` · ₹${Math.round(cost)}` : ""}
+          </p>
+          <button
+            onClick={() => {
+              onLog(qty, out ? { source, cost } : { source: "home", cost: 0 });
+              setOpen(false);
+              setQty(1);
+            }}
+            className="w-full rounded-xl bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
+          >
+            Add to diary
+          </button>
 
           <div className="flex items-center justify-between pt-0.5">
             <button
               onClick={() => setEditing(true)}
-              className="text-[11px] font-semibold uppercase tracking-wide text-accent-2"
+              className="text-xs font-semibold text-accent-2"
             >
               ✎ Edit details
             </button>
             {onForget && (
               <button
                 onClick={onForget}
-                className="text-[11px] font-semibold uppercase tracking-wide text-muted"
+                className="text-xs font-semibold text-muted"
               >
                 Forget
               </button>
@@ -600,21 +599,21 @@ function EditFoodForm({
   const [category, setCategory] = useState(item.category ?? "");
 
   return (
-    <div className="space-y-2 border-t border-border px-3 py-2.5">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+    <div className="space-y-3 px-4 pb-4">
+      <p className="text-xs font-semibold text-muted">
         Edit “{item.name}” (per {serving || "serving"})
       </p>
       <TextField label="Serving" value={serving} onChange={setServing} placeholder="1 plate / 100 g" />
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2.5">
         <NumberField label="kcal" value={cal} onChange={setCal} />
         <NumberField label="sugar g" value={sugar} onChange={setSugar} />
         <NumberField label="protein g" value={protein} onChange={setProtein} />
       </div>
       <TextField label="Category" value={category} onChange={setCategory} placeholder="South Indian" />
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <button
           onClick={onCancel}
-          className="flex-1 rounded-lg border border-border py-2 text-[11px] font-bold uppercase tracking-wide text-muted"
+          className="flex-1 rounded-xl bg-surface-2 py-3 text-xs font-bold uppercase tracking-wide text-muted"
         >
           Cancel
         </button>
@@ -629,7 +628,7 @@ function EditFoodForm({
               category: category.trim() || null,
             })
           }
-          className="flex-1 rounded-lg bg-accent py-2 text-[11px] font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
+          className="flex-1 rounded-xl bg-accent py-3 text-xs font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
         >
           Save details
         </button>
@@ -641,21 +640,19 @@ function EditFoodForm({
 function QuantityStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const clamp = (v: number) => Math.max(0.25, Math.round(v * 100) / 100);
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-        Servings
-      </span>
-      <div className="ml-auto flex items-center gap-2">
+    <div className="flex items-center justify-between rounded-xl bg-surface-2 px-4 py-2.5">
+      <span className="text-xs font-semibold text-muted">Servings</span>
+      <div className="flex items-center gap-3">
         <button
           onClick={() => onChange(clamp(value - 0.5))}
-          className="h-8 w-8 rounded-lg border border-border bg-surface-3 text-base font-bold active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-3 text-lg font-bold text-muted active:scale-90"
         >
           −
         </button>
-        <span className="mono w-12 text-center text-base font-bold">{value}</span>
+        <span className="display w-10 text-center text-lg font-light">{value}</span>
         <button
           onClick={() => onChange(clamp(value + 0.5))}
-          className="h-8 w-8 rounded-lg border border-border bg-surface-3 text-base font-bold active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-lg font-bold text-white active:scale-90"
         >
           +
         </button>
@@ -678,10 +675,10 @@ function NewFoodForm({
   const [protein, setProtein] = useState(0);
 
   return (
-    <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
+    <div className="space-y-3 rounded-2xl border border-dashed border-border p-4">
       <TextField label="Food name" value={name} onChange={setName} placeholder="e.g. Veg sandwich" />
       <TextField label="Serving" value={serving} onChange={setServing} placeholder="1 plate / 100 g" />
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2.5">
         <NumberField label="kcal" value={cal} onChange={setCal} />
         <NumberField label="sugar g" value={sugar} onChange={setSugar} />
         <NumberField label="protein g" value={protein} onChange={setProtein} />
@@ -689,10 +686,10 @@ function NewFoodForm({
       <p className="text-[10px] text-muted">
         Saved to your foods so you can quickly add it next time.
       </p>
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <button
           onClick={onCancel}
-          className="flex-1 rounded-lg border border-border py-2.5 text-xs font-bold uppercase tracking-wide text-muted"
+          className="flex-1 rounded-xl bg-surface-3 py-3 text-xs font-bold uppercase tracking-wide text-muted"
         >
           Cancel
         </button>
@@ -712,7 +709,7 @@ function NewFoodForm({
               1
             );
           }}
-          className="flex-1 rounded-lg bg-accent py-2.5 text-xs font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
+          className="flex-1 rounded-xl bg-accent py-3 text-xs font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
         >
           Save & add
         </button>

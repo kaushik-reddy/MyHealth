@@ -17,6 +17,7 @@
   --pink: #818cf8;          /* indigo (replaces pink) */
   --purple: #a5b4fc;        /* periwinkle */
   --danger: #f87171;        /* soft red, used sparingly */
+  --motiv: #facc15;         /* motivational yellow accent */
 }
 
 @theme inline {
@@ -34,6 +35,7 @@
   --color-pink: var(--pink);
   --color-purple: var(--purple);
   --color-danger: var(--danger);
+  --color-motiv: var(--motiv);
   --font-sans: var(--font-app-sans);
   --font-mono: var(--font-app-num);
 }
@@ -94,6 +96,26 @@ body {
   height: 2.75rem;
   border-radius: 0.9rem;
   flex-shrink: 0;
+}
+
+/* clean form field surface (sits inside a card, slightly inset) */
+.field {
+  background: var(--surface-3);
+  border: 1px solid transparent;
+  border-radius: 0.9rem;
+  transition: border-color 0.15s ease;
+}
+.field:focus-within {
+  border-color: var(--accent);
+}
+
+/* small sentence-case field label */
+.field-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 /* floating pill bottom nav */

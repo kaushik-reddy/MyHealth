@@ -161,14 +161,10 @@ function Dashboard() {
         />
       </section>
 
-      {/* ===== Today's goals ===== */}
+      {/* ===== Live tracker widget (lock-screen style) ===== */}
       <section className="rise-in space-y-3">
-        <h2 className="px-1 text-xs font-bold uppercase tracking-[0.2em] text-muted">
-          Today&apos;s goals
-        </h2>
-        {goals.map((g) => (
-          <GoalCard key={g.key} row={g} />
-        ))}
+        <LiveTracker goals={goals} />
+        <Motivation message={motivationFor(goals, remaining)} />
       </section>
 
       {/* ===== Journey to goal ===== */}
@@ -321,36 +317,110 @@ interface GoalRow {
   invert?: boolean;
 }
 
-/* ---------- Goal card (Box Box style row) ---------- */
-function GoalCard({ row }: { row: GoalRow }) {
-  const pct = row.max > 0 ? Math.min(row.value / row.max, 1) : 0;
-  const over = row.invert && row.value > row.max;
-  const color = over ? "var(--danger)" : row.color;
+/* ---------- Live tracker widget (iOS live-activity / lock-screen style) ---------- */
+function LiveTracker({ goals }: { goals: GoalRow[] }) {
   return (
-    <div className="stat-row flex items-center gap-4 p-4">
-      <span className="chip text-xl" style={{ background: `${row.color}1f` }}>
-        {row.icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between">
-          <span className="text-sm font-semibold">{row.label}</span>
-          <span className="display text-lg font-light">
-            {Math.round(row.value).toLocaleString()}
-            <span className="ml-0.5 text-xs text-muted">
-              /{Math.round(row.max).toLocaleString()}
-              {row.unit && ` ${row.unit}`}
-            </span>
+    <div className="overflow-hidden rounded-[1.75rem] border border-border bg-surface-2">
+      {/* header */}
+      <div className="flex items-center justify-between px-5 pt-4">
+        <div className="flex items-center gap-2.5">
+          <span className="chip h-8 w-8 rounded-xl bg-accent text-sm font-extrabold text-white">
+            MH
           </span>
+          <div className="leading-tight">
+            <p className="text-sm font-bold">Today&apos;s tracker</p>
+            <p className="text-[10px] text-muted">MyHealth · live</p>
+          </div>
         </div>
-        <div className="tower-bar mt-2.5">
-          <div
-            className="tower-fill"
-            style={{ width: `${pct * 100}%`, background: color }}
-          />
-        </div>
+        <span className="flex items-center gap-1.5 rounded-full bg-surface-3 px-2.5 py-1">
+          <span className="live-dot h-1.5 w-1.5 rounded-full bg-accent" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
+            Live
+          </span>
+        </span>
+      </div>
+
+      {/* rows */}
+      <div className="space-y-3.5 px-5 py-4">
+        {goals.map((g) => {
+          const pct = g.max > 0 ? Math.min(g.value / g.max, 1) : 0;
+          const over = g.invert && g.value > g.max;
+          const color = over ? "var(--danger)" : g.color;
+          return (
+            <div key={g.key} className="flex items-center gap-3">
+              <span className="w-5 text-center text-base">{g.icon}</span>
+              <span className="w-16 shrink-0 text-xs font-semibold text-muted">
+                {g.label}
+              </span>
+              <div className="tower-bar flex-1">
+                <div
+                  className="tower-fill"
+                  style={{ width: `${pct * 100}%`, background: color }}
+                />
+              </div>
+              <span className="display w-20 shrink-0 text-right text-xs">
+                {Math.round(g.value).toLocaleString()}
+                <span className="text-[10px] text-muted">
+                  /{Math.round(g.max).toLocaleString()}
+                </span>
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
+}
+
+/* ---------- Motivational comment (yellow, Box Box style) ---------- */
+function Motivation({
+  message,
+}: {
+  message: { lead: string; highlight: string; tail?: string };
+}) {
+  return (
+    <p className="px-1 text-xl font-extrabold leading-snug tracking-tight">
+      {message.lead}{" "}
+      <span style={{ color: "var(--motiv)" }}>{message.highlight}</span>
+      {message.tail ? ` ${message.tail}` : ""}
+    </p>
+  );
+}
+
+function motivationFor(
+  goals: GoalRow[],
+  remaining: number
+): { lead: string; highlight: string; tail?: string } {
+  const by = (k: string) => goals.find((g) => g.key === k);
+  const steps = by("steps");
+  const water = by("water");
+  const protein = by("protein");
+  const sugar = by("sugar");
+
+  const stepsPct = steps && steps.max ? steps.value / steps.max : 0;
+  const waterPct = water && water.max ? water.value / water.max : 0;
+  const proteinPct = protein && protein.max ? protein.value / protein.max : 0;
+  const sugarOver = sugar ? sugar.value > sugar.max : false;
+
+  if (sugarOver) {
+    return { lead: "Sugar's a bit high —", highlight: "ease off", tail: "the sweets today." };
+  }
+  if (stepsPct >= 1) {
+    return { lead: "Step goal smashed.", highlight: "You're unstoppable!" };
+  }
+  if (waterPct < 0.4) {
+    return { lead: "Hydrate up —", highlight: "your body will thank you." };
+  }
+  if (proteinPct >= 1) {
+    return { lead: "Protein on point.", highlight: "Muscles fueled!" };
+  }
+  if (remaining > 0 && remaining < 300) {
+    return { lead: "Almost at your target —", highlight: "finish strong." };
+  }
+  if (stepsPct >= 0.6) {
+    return { lead: "Great pace today.", highlight: "Keep moving!" };
+  }
+  return { lead: "A little progress is", highlight: "still progress.", tail: "Let's go!" };
 }
 
 /* ---------- Mini stat ---------- */
