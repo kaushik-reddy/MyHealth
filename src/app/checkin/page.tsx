@@ -565,6 +565,16 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
     { cal: 0, sugar: 0, protein: 0 }
   );
 
+  const MEALS: { value: FoodEntry["meal_type"]; label: string }[] = [
+    { value: "breakfast", label: "AM" },
+    { value: "lunch",     label: "Lunch" },
+    { value: "dinner",    label: "Dinner" },
+    { value: "snack",     label: "Snack" },
+  ];
+
+  // Entries for the currently selected meal only
+  const mealFoods = foodsToday.filter((f) => f.meal_type === meal);
+
   return (
     <Section
       title="Food diary"
@@ -576,27 +586,53 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
           : "No meals logged yet — tap to add"
       }
     >
-      {/* meal selector applies to whatever you add */}
+      {/* meal tab bar */}
       <div>
         <span className="field-label">Adding to</span>
-        <Segmented
-          value={meal}
-          onChange={setMeal}
-          options={[
-            { value: "breakfast", label: "AM" },
-            { value: "lunch", label: "Lunch" },
-            { value: "dinner", label: "Dinner" },
-            { value: "snack", label: "Snack" },
-          ]}
-        />
+        <div className="flex gap-1.5 rounded-2xl bg-surface-3 p-1">
+          {MEALS.map((m) => {
+            const hasEntries = foodsToday.some((f) => f.meal_type === m.value);
+            const isActive  = meal === m.value;
+            // active + has  → green; active + empty → blue; inactive + has → green muted; inactive + empty → amber
+            const bg = isActive
+              ? hasEntries
+                ? "#14532d"   // dark green fill
+                : "var(--accent)"
+              : "transparent";
+            const border = !isActive && !hasEntries ? "1px solid #ca8a0455" : "1px solid transparent";
+            const textColor = isActive
+              ? "#fff"
+              : hasEntries
+                ? "#34d399"   // green label
+                : "#ca8a04";  // amber label
+
+            return (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => setMeal(m.value)}
+                className="relative flex flex-1 items-center justify-center gap-1 rounded-xl py-2.5 text-xs font-bold transition active:scale-95"
+                style={{ background: bg, border, color: textColor }}
+              >
+                {m.label}
+                {hasEntries && (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ background: isActive ? "#86efac" : "#34d399" }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* today's entries */}
+      {/* entries for the selected meal */}
       <div className="space-y-2">
-        {foodsToday.length === 0 && (
-          <p className="text-xs text-muted">No meals logged yet today.</p>
+        {mealFoods.length === 0 && (
+          <p className="text-xs text-muted">Nothing logged for this meal yet.</p>
         )}
-        {foodsToday.map((f) => (
+        {mealFoods.map((f) => (
           <div
             key={f.id}
             className="flex items-center justify-between rounded-2xl bg-surface-3 px-4 py-3"
@@ -621,7 +657,7 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
                 )}
               </p>
               <p className="mt-0.5 text-[11px] text-muted capitalize">
-                {f.meal_type} · {Math.round(f.calories)} kcal · {f.sugar_g}g sugar · {f.protein_g}g protein
+                {Math.round(f.calories)} kcal · {f.sugar_g}g sugar · {f.protein_g}g protein
               </p>
             </div>
             <button
@@ -635,9 +671,18 @@ function FoodSection({ onSaved }: { onSaved: () => void }) {
         ))}
       </div>
 
+      {mealFoods.length > 0 && (
+        <p className="px-1 text-[11px] text-muted">
+          {MEALS.find((m) => m.value === meal)?.label ?? meal} total:{" "}
+          {Math.round(mealFoods.reduce((s, f) => s + f.calories, 0))} kcal ·{" "}
+          {Math.round(mealFoods.reduce((s, f) => s + f.sugar_g, 0) * 10) / 10}g sugar ·{" "}
+          {Math.round(mealFoods.reduce((s, f) => s + f.protein_g, 0))}g protein
+        </p>
+      )}
+
       {foodsToday.length > 0 && (
         <p className="px-1 text-[11px] text-muted">
-          Total: {Math.round(totals.cal)} kcal · {Math.round(totals.sugar * 10) / 10}g sugar ·{" "}
+          Day total: {Math.round(totals.cal)} kcal · {Math.round(totals.sugar * 10) / 10}g sugar ·{" "}
           {Math.round(totals.protein)}g protein
         </p>
       )}
