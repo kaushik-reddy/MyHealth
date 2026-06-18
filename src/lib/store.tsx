@@ -37,8 +37,15 @@ interface StoreState {
   sugarItems: SugarItem[];
   weights: WeightEntry[];
 
+  /** The day currently being viewed/edited (YYYY-MM-DD). Defaults to today. */
+  selectedDate: string;
+  setSelectedDate: (date: string) => Promise<void>;
+
   saveProfile: (p: Profile) => Promise<void>;
+  /** Log for the real today (used by the dashboard / sugar pages). */
   todayLog: DailyLog;
+  /** Log for the currently selected day (used by the check-in page). */
+  dayLog: DailyLog;
   updateTodayLog: (patch: Partial<DailyLog>) => Promise<void>;
   addFood: (food: Omit<FoodEntry, "log_date">) => Promise<void>;
   deleteFood: (id: string) => Promise<void>;
@@ -76,20 +83,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [foodLibrary, setFoodLibrary] = useState<FoodLibraryItem[]>([]);
   const [sugarItems, setSugarItems] = useState<SugarItem[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
+  const [selectedDate, setSelectedDateState] = useState(todayKey());
 
   const repoRef = useRef<Repo>(new LocalRepo());
   const demoMode = !supabaseConfigured;
 
+  const selectedRef = useRef(selectedDate);
+  selectedRef.current = selectedDate;
+
   const loadAll = useCallback(async () => {
     const repo = repoRef.current;
-    const today = todayKey();
+    const day = selectedRef.current;
     const since = new Date();
     since.setDate(since.getDate() - 30);
     const sinceKey = since.toISOString().slice(0, 10);
     const [p, lg, fd, rf, lib, sg, wt] = await Promise.all([
       repo.getProfile(),
       repo.getLogs(),
-      repo.getFoods(today),
+      repo.getFoods(day),
       repo.getFoodsSince(sinceKey),
       repo.getFoodLibrary(),
       repo.getSugarItems(),
@@ -136,11 +147,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadAll]);
 
-  const today = todayKey();
-  const todayLog = useMemo(
+  const today = selectedDate;
+  const realToday = todayKey();
+  const dayLog = useMemo(
     () => logs.find((l) => l.log_date === today) ?? emptyLog(today),
     [logs, today]
   );
+  const todayLog = useMemo(
+    () => logs.find((l) => l.log_date === realToday) ?? emptyLog(realToday),
+    [logs, realToday]
+  );
+
+  const setSelectedDate = useCallback(async (date: string) => {
+    setSelectedDateState(date);
+    selectedRef.current = date;
+    const fd = await repoRef.current.getFoods(date);
+    setFoodsToday(fd);
+  }, []);
 
   const saveProfile = useCallback(async (p: Profile) => {
     await repoRef.current.saveProfile(p);
@@ -286,11 +309,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         );
       });
       await updateTodayLog({ weight_kg: kg });
-      if (profile) {
+      // Only treat it as the latest weight when logging for today.
+      if (profile && today === realToday) {
         await saveProfile({ ...profile, current_weight_kg: kg });
       }
     },
-    [today, updateTodayLog, profile, saveProfile]
+    [today, realToday, updateTodayLog, profile, saveProfile]
   );
 
   const signOut = useCallback(async () => {
@@ -313,8 +337,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     foodLibrary,
     sugarItems,
     weights,
+    selectedDate,
+    setSelectedDate,
     saveProfile,
     todayLog,
+    dayLog,
     updateTodayLog,
     addFood,
     deleteFood,

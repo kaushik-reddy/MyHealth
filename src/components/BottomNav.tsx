@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const items = [
   { href: "/", label: "Today", icon: HomeIcon },
   { href: "/checkin", label: "Check-in", icon: PlusIcon },
+  { href: "/calendar", label: "Calendar", icon: CalendarIcon },
   { href: "/sugar", label: "Sugar", icon: DropIcon },
   { href: "/progress", label: "Progress", icon: ChartIcon },
   { href: "/profile", label: "Profile", icon: GearIcon },
@@ -73,6 +74,14 @@ function ChartIcon(p: IP) {
     <svg viewBox="0 0 24 24" {...base} {...p}>
       <path d="M4 19h16" />
       <path d="M7 16V9M12 16V5M17 16v-4" />
+    </svg>
+  );
+}
+function CalendarIcon(p: IP) {
+  return (
+    <svg viewBox="0 0 24 24" {...base} {...p}>
+      <rect x="3" y="4" width="18" height="17" rx="2" />
+      <path d="M3 9h18M8 2v4M16 2v4" />
     </svg>
   );
 }

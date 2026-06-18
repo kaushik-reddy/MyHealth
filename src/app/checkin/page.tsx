@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import Collapsible from "@/components/Collapsible";
 import { NumberField, Segmented, Stepper, TextField } from "@/components/Inputs";
 import { useStore } from "@/lib/store";
-import { stepsToKm, walkingCalories } from "@/lib/health";
+import { stepsToKm, walkingCalories, todayKey } from "@/lib/health";
 import { DEFAULT_FOODS } from "@/lib/foods";
 import type { FoodEntry, FoodLibraryItem, FoodSource } from "@/lib/types";
 
@@ -19,15 +20,29 @@ const SOURCE_META: Record<FoodSource, { label: string; tint: string }> = {
 
 export default function CheckinPage() {
   return (
-    <AppShell title="Check-in" subtitle="Log today's stats">
-      <Checkin />
+    <AppShell title="Check-in" subtitle="Log a day's stats">
+      <Suspense fallback={null}>
+        <Checkin />
+      </Suspense>
     </AppShell>
   );
 }
 
 function Checkin() {
-  const { profile, todayLog, updateTodayLog, addWeight } = useStore();
+  const { profile, dayLog, updateTodayLog, addWeight, selectedDate, setSelectedDate } =
+    useStore();
+  const searchParams = useSearchParams();
   const [saved, setSaved] = useState(false);
+
+  // Sync the store's selected day with the ?date= query param. Defaults to
+  // today, and resets back to today when leaving the page.
+  useEffect(() => {
+    const d = searchParams.get("date") || todayKey();
+    setSelectedDate(d);
+    return () => {
+      setSelectedDate(todayKey());
+    };
+  }, [searchParams, setSelectedDate]);
 
   if (!profile) return null;
 
@@ -42,7 +57,7 @@ function Checkin() {
     await updateTodayLog({
       steps,
       distance_km: km,
-      active_calories: Math.max(todayLog.active_calories, cals),
+      active_calories: Math.max(dayLog.active_calories, cals),
     });
     flash();
   }
@@ -58,34 +73,36 @@ function Checkin() {
         Saved ✓
       </div>
 
+      <DayNav date={selectedDate} onChange={setSelectedDate} />
+
       <Section
         title="Movement"
         tint="var(--accent-2)"
         delay={0}
         summary={
-          todayLog.steps || todayLog.active_calories
-            ? `${todayLog.steps.toLocaleString()} steps · ${todayLog.distance_km.toFixed(1)} km · ${Math.round(todayLog.active_calories)} kcal`
+          dayLog.steps || dayLog.active_calories
+            ? `${dayLog.steps.toLocaleString()} steps · ${dayLog.distance_km.toFixed(1)} km · ${Math.round(dayLog.active_calories)} kcal`
             : "No movement logged yet — tap to add"
         }
       >
-        <Stepper label="Steps" value={todayLog.steps} onChange={setSteps} step={500} max={60000} />
+        <Stepper label="Steps" value={dayLog.steps} onChange={setSteps} step={500} max={60000} />
         <div className="grid grid-cols-2 gap-3">
           <NumberField
             label="Distance"
-            value={todayLog.distance_km}
+            value={dayLog.distance_km}
             onChange={(v) => updateTodayLog({ distance_km: v }).then(flash)}
             unit="km"
           />
           <NumberField
             label="Calories burned"
-            value={todayLog.active_calories}
+            value={dayLog.active_calories}
             onChange={(v) => updateTodayLog({ active_calories: v }).then(flash)}
             unit="kcal"
           />
         </div>
         <p className="text-[11px] text-muted">
-          ≈ {stepsToKm(todayLog.steps, profile.height_cm).toFixed(2)} km ·{" "}
-          {walkingCalories(stepsToKm(todayLog.steps, profile.height_cm), profile.current_weight_kg)} kcal from walking
+          ≈ {stepsToKm(dayLog.steps, profile.height_cm).toFixed(2)} km ·{" "}
+          {walkingCalories(stepsToKm(dayLog.steps, profile.height_cm), profile.current_weight_kg)} kcal from walking
         </p>
       </Section>
 
@@ -94,18 +111,18 @@ function Checkin() {
         tint="var(--purple)"
         delay={60}
         summary={
-          todayLog.water_ml
-            ? `${todayLog.water_ml} ml of ${profile.daily_water_goal_ml} ml`
+          dayLog.water_ml
+            ? `${dayLog.water_ml} ml of ${profile.daily_water_goal_ml} ml`
             : "No water logged yet — tap to add"
         }
       >
         <div className="flex items-center justify-between">
-          <span className="mono text-2xl font-bold">{todayLog.water_ml} ml</span>
+          <span className="mono text-2xl font-bold">{dayLog.water_ml} ml</span>
           <div className="flex gap-2">
             {[250, 500].map((ml) => (
               <button
                 key={ml}
-                onClick={() => updateTodayLog({ water_ml: todayLog.water_ml + ml }).then(flash)}
+                onClick={() => updateTodayLog({ water_ml: dayLog.water_ml + ml }).then(flash)}
                 className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs font-bold transition active:scale-95"
               >
                 +{ml}
@@ -130,13 +147,13 @@ function Checkin() {
         tint="var(--accent-3)"
         delay={180}
         summary={
-          todayLog.weight_kg
-            ? `${todayLog.weight_kg} kg${todayLog.mood ? ` · feeling ${todayLog.mood}` : ""}`
+          dayLog.weight_kg
+            ? `${dayLog.weight_kg} kg${dayLog.mood ? ` · feeling ${dayLog.mood}` : ""}`
             : "No weigh-in yet — tap to add"
         }
       >
         <WeightInput
-          current={todayLog.weight_kg ?? profile.current_weight_kg}
+          current={dayLog.weight_kg ?? profile.current_weight_kg}
           onSave={(kg) => addWeight(kg).then(flash)}
         />
         <div>
@@ -144,7 +161,7 @@ function Checkin() {
             Mood
           </span>
           <Segmented
-            value={todayLog.mood ?? "ok"}
+            value={dayLog.mood ?? "ok"}
             onChange={(m) => updateTodayLog({ mood: m }).then(flash)}
             options={[
               { value: "great", label: "🌟" },
@@ -156,11 +173,68 @@ function Checkin() {
         </div>
         <TextField
           label="Notes"
-          value={todayLog.notes ?? ""}
+          value={dayLog.notes ?? ""}
           onChange={(v) => updateTodayLog({ notes: v })}
           placeholder="How did today go?"
         />
       </Section>
+    </div>
+  );
+}
+
+function DayNav({
+  date,
+  onChange,
+}: {
+  date: string;
+  onChange: (d: string) => void;
+}) {
+  const today = todayKey();
+  const isToday = date === today;
+  const d = new Date(date + "T00:00:00");
+
+  const shift = (days: number) => {
+    const nd = new Date(d);
+    nd.setDate(nd.getDate() + days);
+    onChange(nd.toISOString().slice(0, 10));
+  };
+
+  const label = isToday
+    ? "Today"
+    : d.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+
+  return (
+    <div className="card flex items-center justify-between p-2">
+      <button
+        onClick={() => shift(-1)}
+        className="h-9 w-9 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95"
+        aria-label="Previous day"
+      >
+        ‹
+      </button>
+      <div className="text-center">
+        <p className="text-sm font-bold">{label}</p>
+        <p className="text-[10px] text-muted">
+          {d.toLocaleDateString(undefined, {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
+      </div>
+      <button
+        onClick={() => shift(1)}
+        disabled={isToday}
+        className="h-9 w-9 rounded-lg border border-border bg-surface-2 text-lg font-bold active:scale-95 disabled:opacity-30"
+        aria-label="Next day"
+      >
+        ›
+      </button>
     </div>
   );
 }
