@@ -1,6 +1,7 @@
 import type {
   DailyLog,
   FoodEntry,
+  FoodLibraryItem,
   Profile,
   SugarItem,
   WeightEntry,
@@ -11,6 +12,7 @@ const KEYS = {
   profile: "mh:profile",
   logs: "mh:logs",
   foods: "mh:foods",
+  library: "mh:library",
   sugar: "mh:sugar",
   weights: "mh:weights",
 };
@@ -70,6 +72,30 @@ export class LocalRepo implements Repo {
     write(
       KEYS.foods,
       all.filter((f) => f.id !== id)
+    );
+  }
+
+  async getFoodLibrary() {
+    return read<FoodLibraryItem[]>(KEYS.library, []);
+  }
+  async upsertFoodLibrary(item: FoodLibraryItem) {
+    const all = read<FoodLibraryItem[]>(KEYS.library, []);
+    const withId = { ...item, id: item.id ?? uid() };
+    const idx = all.findIndex(
+      (i) =>
+        i.id === withId.id ||
+        i.name.toLowerCase() === withId.name.toLowerCase()
+    );
+    if (idx >= 0) all[idx] = { ...all[idx], ...withId, id: all[idx].id };
+    else all.push(withId);
+    write(KEYS.library, all);
+    return idx >= 0 ? all[idx] : withId;
+  }
+  async deleteFoodLibrary(id: string) {
+    const all = read<FoodLibraryItem[]>(KEYS.library, []);
+    write(
+      KEYS.library,
+      all.filter((i) => i.id !== id)
     );
   }
 

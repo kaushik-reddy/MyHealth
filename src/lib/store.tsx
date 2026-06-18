@@ -14,6 +14,7 @@ import { createClient, supabaseConfigured } from "@/lib/supabase/client";
 import type {
   DailyLog,
   FoodEntry,
+  FoodLibraryItem,
   Profile,
   SugarItem,
   WeightEntry,
@@ -30,6 +31,7 @@ interface StoreState {
   profile: Profile | null;
   logs: DailyLog[];
   foodsToday: FoodEntry[];
+  foodLibrary: FoodLibraryItem[];
   sugarItems: SugarItem[];
   weights: WeightEntry[];
 
@@ -38,6 +40,13 @@ interface StoreState {
   updateTodayLog: (patch: Partial<DailyLog>) => Promise<void>;
   addFood: (food: Omit<FoodEntry, "log_date">) => Promise<void>;
   deleteFood: (id: string) => Promise<void>;
+  rememberFood: (item: FoodLibraryItem) => Promise<FoodLibraryItem>;
+  logLibraryFood: (
+    item: FoodLibraryItem,
+    quantity: number,
+    meal: FoodEntry["meal_type"]
+  ) => Promise<void>;
+  deleteLibraryFood: (id: string) => Promise<void>;
   upsertSugarItem: (item: SugarItem) => Promise<void>;
   logSugarItem: (item: SugarItem) => Promise<void>;
   deleteSugarItem: (id: string) => Promise<void>;
@@ -60,6 +69,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [foodsToday, setFoodsToday] = useState<FoodEntry[]>([]);
+  const [foodLibrary, setFoodLibrary] = useState<FoodLibraryItem[]>([]);
   const [sugarItems, setSugarItems] = useState<SugarItem[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
 
@@ -69,16 +79,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const loadAll = useCallback(async () => {
     const repo = repoRef.current;
     const today = todayKey();
-    const [p, lg, fd, sg, wt] = await Promise.all([
+    const [p, lg, fd, lib, sg, wt] = await Promise.all([
       repo.getProfile(),
       repo.getLogs(),
       repo.getFoods(today),
+      repo.getFoodLibrary(),
       repo.getSugarItems(),
       repo.getWeights(),
     ]);
     setProfile(p);
     setLogs(lg);
     setFoodsToday(fd);
+    setFoodLibrary(lib);
     setSugarItems(sg);
     setWeights(wt);
   }, []);
@@ -176,6 +188,48 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [foodsToday, recalcFoodTotals]
   );
 
+  const rememberFood = useCallback(async (item: FoodLibraryItem) => {
+    const saved = await repoRef.current.upsertFoodLibrary(item);
+    setFoodLibrary((prev) => {
+      const others = prev.filter(
+        (i) =>
+          i.id !== saved.id &&
+          i.name.toLowerCase() !== saved.name.toLowerCase()
+      );
+      return [saved, ...others];
+    });
+    return saved;
+  }, []);
+
+  const logLibraryFood = useCallback(
+    async (
+      item: FoodLibraryItem,
+      quantity: number,
+      meal: FoodEntry["meal_type"]
+    ) => {
+      const q = Math.max(0.25, quantity);
+      await addFood({
+        name: item.name,
+        meal_type: meal,
+        calories: Math.round(item.calories * q),
+        sugar_g: Math.round(item.sugar_g * q * 10) / 10,
+        protein_g: Math.round(item.protein_g * q * 10) / 10,
+        quantity: q,
+        serving_label: item.serving_label,
+      });
+      await rememberFood({
+        ...item,
+        times_used: (item.times_used || 0) + 1,
+      });
+    },
+    [addFood, rememberFood]
+  );
+
+  const deleteLibraryFood = useCallback(async (id: string) => {
+    await repoRef.current.deleteFoodLibrary(id);
+    setFoodLibrary((prev) => prev.filter((i) => i.id !== id));
+  }, []);
+
   const upsertSugarItem = useCallback(async (item: SugarItem) => {
     const saved = await repoRef.current.upsertSugarItem(item);
     setSugarItems((prev) => {
@@ -241,6 +295,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     profile,
     logs,
     foodsToday,
+    foodLibrary,
     sugarItems,
     weights,
     saveProfile,
@@ -248,6 +303,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     updateTodayLog,
     addFood,
     deleteFood,
+    rememberFood,
+    logLibraryFood,
+    deleteLibraryFood,
     upsertSugarItem,
     logSugarItem,
     deleteSugarItem,

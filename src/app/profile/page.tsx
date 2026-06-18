@@ -200,7 +200,7 @@ function Garage() {
 
       <button
         onClick={save}
-        className="w-full rounded-lg bg-accent py-3.5 text-sm font-bold uppercase tracking-wide text-white"
+        className="w-full rounded-lg bg-accent py-3.5 text-sm font-bold uppercase tracking-wide text-[#0e1512]"
       >
         Save setup
       </button>

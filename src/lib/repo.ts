@@ -1,6 +1,7 @@
 import type {
   DailyLog,
   FoodEntry,
+  FoodLibraryItem,
   Profile,
   SugarItem,
   WeightEntry,
@@ -17,6 +18,10 @@ export interface Repo {
   getFoods(date: string): Promise<FoodEntry[]>;
   addFood(food: FoodEntry): Promise<FoodEntry>;
   deleteFood(id: string): Promise<void>;
+
+  getFoodLibrary(): Promise<FoodLibraryItem[]>;
+  upsertFoodLibrary(item: FoodLibraryItem): Promise<FoodLibraryItem>;
+  deleteFoodLibrary(id: string): Promise<void>;
 
   getSugarItems(): Promise<SugarItem[]>;
   upsertSugarItem(item: SugarItem): Promise<SugarItem>;

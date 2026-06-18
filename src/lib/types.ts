@@ -55,6 +55,22 @@ export interface FoodEntry {
   calories: number;
   sugar_g: number;
   protein_g: number;
+  quantity?: number;
+  serving_label?: string | null;
+  created_at?: string;
+}
+
+/** A remembered food — macros are per single serving. */
+export interface FoodLibraryItem {
+  id?: string;
+  user_id?: string;
+  name: string;
+  serving_label: string; // e.g. "1 medium", "100 g", "1 cup"
+  calories: number;
+  sugar_g: number;
+  protein_g: number;
+  category: string | null;
+  times_used: number;
   created_at?: string;
 }
 

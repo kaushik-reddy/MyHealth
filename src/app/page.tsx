@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import AppShell from "@/components/AppShell";
-import Ring from "@/components/Ring";
 import { useStore } from "@/lib/store";
 import {
   bmi,
@@ -11,7 +10,6 @@ import {
   formatReachDate,
   projectWeight,
   tdee,
-  todayKey,
 } from "@/lib/health";
 
 export default function DashboardPage() {
@@ -66,10 +64,92 @@ function Dashboard() {
 
   const toGo = profile.current_weight_kg - profile.goal_weight_kg;
 
+  // Build timing-tower rows (sorted by completion, like a live leaderboard).
+  const rows: TowerRow[] = [
+    {
+      key: "intake",
+      label: "Calories",
+      sub: "intake vs target",
+      value: todayLog.calories_intake,
+      max: profile.daily_calorie_target,
+      unit: "kcal",
+      color: "var(--accent)",
+    },
+    {
+      key: "steps",
+      label: "Steps",
+      sub: `${todayLog.distance_km.toFixed(1)} km walked`,
+      value: todayLog.steps,
+      max: profile.daily_step_goal,
+      unit: "",
+      color: "var(--accent-2)",
+    },
+    {
+      key: "protein",
+      label: "Protein",
+      sub: "muscle fuel",
+      value: todayLog.protein_g,
+      max: profile.daily_protein_goal_g,
+      unit: "g",
+      color: "var(--green)",
+    },
+    {
+      key: "water",
+      label: "Water",
+      sub: "hydration",
+      value: todayLog.water_ml,
+      max: profile.daily_water_goal_ml,
+      unit: "ml",
+      color: "var(--purple)",
+    },
+    {
+      key: "sugar",
+      label: "Sugar",
+      sub: "stay under the limit",
+      value: todayLog.sugar_g,
+      max: profile.daily_sugar_limit_g,
+      unit: "g",
+      color: "var(--pink)",
+      invert: true,
+    },
+  ];
+  const ranked = rows
+    .map((r) => ({ ...r, pct: r.max > 0 ? r.value / r.max : 0 }))
+    .sort((a, b) =>
+      (a.invert ? 1 - a.pct : b.pct) - (a.invert ? 1 - b.pct : a.pct)
+    );
+
   return (
     <div className="space-y-4">
-      {/* Hero — net energy */}
-      <div className="card relative overflow-hidden p-5">
+      {/* Lock-screen style live "race progress" notification */}
+      <div className="card rise-in overflow-hidden p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="speed-tab flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+              <span className="mono text-sm font-extrabold text-[#0e1512]">MH</span>
+            </div>
+            <div className="leading-tight">
+              <p className="text-xs font-bold">Race progress</p>
+              <p className="text-[10px] text-muted">MyHealth · now</p>
+            </div>
+          </div>
+          <span className="flex items-center gap-1.5 rounded-full bg-surface-3 px-2 py-1">
+            <span className="live-dot h-1.5 w-1.5 rounded-full bg-accent" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
+              Live
+            </span>
+          </span>
+        </div>
+
+        <div className="space-y-2.5">
+          {ranked.map((r, i) => (
+            <TowerRowView key={r.key} pos={i + 1} row={r} />
+          ))}
+        </div>
+      </div>
+
+      {/* Energy balance */}
+      <div className="card rise-in relative overflow-hidden p-5">
         <div className="speed-tab absolute inset-0 opacity-40" />
         <div className="relative flex items-center justify-between">
           <div>
@@ -77,14 +157,14 @@ function Dashboard() {
               Energy balance
             </p>
             <p
-              className="mono text-3xl font-black"
-              style={{ color: net <= 0 ? "var(--green)" : "var(--accent)" }}
+              className="mono text-3xl font-extrabold"
+              style={{ color: net <= 0 ? "var(--green)" : "var(--danger)" }}
             >
               {net > 0 ? "+" : ""}
               {Math.round(net)}
             </p>
             <p className="text-xs text-muted">
-              {net <= 0 ? "Deficit — losing 🔥" : "Surplus — gaining"}
+              {net <= 0 ? "Deficit — on track 🌿" : "Surplus — ease off"}
             </p>
           </div>
           <div className="text-right text-xs">
@@ -95,47 +175,14 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Activity rings */}
-      <div className="card grid grid-cols-2 gap-2 p-4">
-        <RingStat
-          value={todayLog.calories_intake}
-          max={profile.daily_calorie_target}
-          unit="kcal"
-          label="Intake"
-          color="var(--accent)"
-        />
-        <RingStat
-          value={todayLog.steps}
-          max={profile.daily_step_goal}
-          unit="steps"
-          label="Steps"
-          color="var(--accent-2)"
-        />
-        <RingStat
-          value={todayLog.sugar_g}
-          max={profile.daily_sugar_limit_g}
-          unit="g sugar"
-          label="Sugar"
-          color="var(--pink)"
-          invert
-        />
-        <RingStat
-          value={todayLog.water_ml}
-          max={profile.daily_water_goal_ml}
-          unit="ml"
-          label="Water"
-          color="var(--purple)"
-        />
-      </div>
-
       {/* Projection summary */}
-      <Link href="/progress" className="card block p-5">
+      <Link href="/progress" className="card rise-in block p-5">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-muted">
               Race to goal
             </p>
-            <p className="mono text-2xl font-black">
+            <p className="mono text-2xl font-extrabold">
               {Math.abs(toGo).toFixed(1)}
               <span className="text-sm font-medium text-muted"> kg to go</span>
             </p>
@@ -173,7 +220,7 @@ function Dashboard() {
 
       <Link
         href="/checkin"
-        className="block rounded-xl bg-accent py-3.5 text-center text-sm font-bold uppercase tracking-wide text-white"
+        className="block rounded-xl bg-accent py-3.5 text-center text-sm font-bold uppercase tracking-wide text-[#0e1512] transition active:scale-[0.98]"
       >
         + Daily check-in
       </Link>
@@ -181,34 +228,51 @@ function Dashboard() {
   );
 }
 
-function RingStat({
-  value,
-  max,
-  unit,
-  label,
-  color,
-  invert,
-}: {
+interface TowerRow {
+  key: string;
+  label: string;
+  sub: string;
   value: number;
   max: number;
   unit: string;
-  label: string;
   color: string;
   invert?: boolean;
-}) {
-  const over = invert && value > max;
+}
+
+function TowerRowView({ pos, row }: { pos: number; row: TowerRow & { pct?: number } }) {
+  const pct = row.max > 0 ? row.value / row.max : 0;
+  const over = row.invert && row.value > row.max;
+  const fillColor = over ? "var(--danger)" : row.color;
   return (
-    <div className="flex flex-col items-center py-2">
-      <Ring value={value} max={max} color={over ? "var(--accent)" : color} size={104} stroke={9}>
-        <span className="mono text-lg font-bold leading-none">
-          {Math.round(value)}
-        </span>
-        <span className="text-[9px] uppercase tracking-wide text-muted">{unit}</span>
-      </Ring>
-      <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-        {over && <span className="text-accent"> · over</span>}
+    <div className="flex items-center gap-3">
+      <span
+        className="mono flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold"
+        style={{ background: `${fillColor}22`, color: fillColor }}
+      >
+        {pos}
       </span>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-baseline justify-between gap-2">
+          <span className="truncate text-xs font-semibold">{row.label}</span>
+          <span className="mono shrink-0 text-xs font-bold">
+            {Math.round(row.value).toLocaleString()}
+            <span className="text-[10px] font-normal text-muted">
+              /{Math.round(row.max).toLocaleString()}
+              {row.unit && ` ${row.unit}`}
+            </span>
+          </span>
+        </div>
+        <div className="tower-bar">
+          <div
+            className="tower-fill"
+            style={{
+              width: `${Math.min(pct, 1) * 100}%`,
+              background: `linear-gradient(90deg, ${fillColor}, color-mix(in srgb, ${fillColor} 60%, white))`,
+            }}
+          />
+          <div className="tower-ticks" />
+        </div>
+      </div>
     </div>
   );
 }

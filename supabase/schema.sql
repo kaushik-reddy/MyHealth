@@ -55,7 +55,24 @@ create table if not exists public.food_entries (
   calories   numeric not null default 0,
   sugar_g    numeric not null default 0,
   protein_g  numeric not null default 0,
+  quantity      numeric not null default 1,
+  serving_label text,
   created_at timestamptz not null default now()
+);
+
+-- ---------- FOOD LIBRARY (remembered foods, macros per serving) ----------
+create table if not exists public.food_library (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  name          text not null,
+  serving_label text not null default '1 serving',
+  calories      numeric not null default 0,
+  sugar_g       numeric not null default 0,
+  protein_g     numeric not null default 0,
+  category      text,
+  times_used    int not null default 0,
+  created_at    timestamptz not null default now(),
+  unique (user_id, name)
 );
 
 -- ---------- SUGAR ITEMS (avoid list) ----------
@@ -83,6 +100,7 @@ create table if not exists public.weight_entries (
 -- Helpful indexes.
 create index if not exists idx_daily_logs_user_date on public.daily_logs (user_id, log_date);
 create index if not exists idx_food_entries_user_date on public.food_entries (user_id, log_date);
+create index if not exists idx_food_library_user on public.food_library (user_id, times_used desc);
 create index if not exists idx_sugar_items_user on public.sugar_items (user_id);
 create index if not exists idx_weight_entries_user on public.weight_entries (user_id, entry_date);
 
@@ -92,6 +110,7 @@ create index if not exists idx_weight_entries_user on public.weight_entries (use
 alter table public.profiles       enable row level security;
 alter table public.daily_logs     enable row level security;
 alter table public.food_entries   enable row level security;
+alter table public.food_library   enable row level security;
 alter table public.sugar_items    enable row level security;
 alter table public.weight_entries enable row level security;
 
@@ -107,6 +126,10 @@ create policy "own daily_logs" on public.daily_logs
 
 drop policy if exists "own food_entries" on public.food_entries;
 create policy "own food_entries" on public.food_entries
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own food_library" on public.food_library;
+create policy "own food_library" on public.food_library
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own sugar_items" on public.sugar_items;

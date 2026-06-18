@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   DailyLog,
   FoodEntry,
+  FoodLibraryItem,
   Profile,
   SugarItem,
   WeightEntry,
@@ -80,6 +81,30 @@ export class SupabaseRepo implements Repo {
 
   async deleteFood(id: string) {
     await this.sb.from("food_entries").delete().eq("id", id);
+  }
+
+  async getFoodLibrary() {
+    const { data } = await this.sb
+      .from("food_library")
+      .select("*")
+      .eq("user_id", this.userId)
+      .order("times_used", { ascending: false });
+    return (data as FoodLibraryItem[]) ?? [];
+  }
+
+  async upsertFoodLibrary(item: FoodLibraryItem) {
+    const row = { ...item, user_id: this.userId };
+    const { data, error } = await this.sb
+      .from("food_library")
+      .upsert(row, { onConflict: "user_id,name" })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as FoodLibraryItem;
+  }
+
+  async deleteFoodLibrary(id: string) {
+    await this.sb.from("food_library").delete().eq("id", id);
   }
 
   async getSugarItems() {

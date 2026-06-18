@@ -1,22 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { StoreProvider } from "@/lib/store";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const appSans = Plus_Jakarta_Sans({
+  variable: "--font-app-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const appNum = Space_Grotesk({
+  variable: "--font-app-num",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: "MyHealth · Box Box",
   description:
-    "Mobile-first health & fitness tracker — sugar, steps, calories and a live weight-goal projection. F1 telemetry style.",
+    "Mobile-first health & fitness tracker — sugar, steps, calories and a live weight-goal projection. Calm forest-paddock style.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0b0d",
+  themeColor: "#0e1512",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -39,7 +41,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
+      className={`${appSans.variable} ${appNum.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <StoreProvider>{children}</StoreProvider>

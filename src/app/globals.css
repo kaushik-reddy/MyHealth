@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
-/* ===== Box-Box / F1 inspired theme ===== */
+/* ===== MyHealth — calm "forest paddock" theme ===== */
 :root {
-  --background: #0a0b0d;
-  --surface: #131519;
-  --surface-2: #1b1e24;
-  --surface-3: #23272f;
-  --foreground: #f4f5f7;
-  --muted: #8b909a;
-  --border: #2a2e36;
+  --background: #0e1512;
+  --surface: #16201b;
+  --surface-2: #1d2922;
+  --surface-3: #26332b;
+  --foreground: #eef2ee;
+  --muted: #97a89d;
+  --border: #2b3a31;
 
-  --accent: #e10600;        /* F1 red */
-  --accent-2: #00e0d1;      /* timing teal */
-  --accent-3: #fbbf24;      /* warning amber */
-  --green: #36d399;
-  --pink: #ff2d8c;
-  --purple: #9b6dff;
+  --accent: #5fc9a0;        /* calm sage / mint — primary */
+  --accent-2: #7fb6e6;      /* soft sky blue */
+  --accent-3: #e6c073;      /* warm sand */
+  --green: #6fcf97;
+  --pink: #e3a3b4;          /* muted rose */
+  --purple: #b3a7e6;        /* soft lavender */
+  --danger: #e0876c;        /* soft terracotta (used sparingly) */
 }
 
 @theme inline {
@@ -32,31 +33,30 @@
   --color-green: var(--green);
   --color-pink: var(--pink);
   --color-purple: var(--purple);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-app-sans);
+  --font-mono: var(--font-app-num);
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-app-sans), system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
 }
 
-body {
-  background-image:
-    radial-gradient(60% 50% at 50% 0%, rgba(225, 6, 0, 0.10) 0%, transparent 60%),
-    radial-gradient(40% 40% at 100% 100%, rgba(0, 224, 209, 0.06) 0%, transparent 60%);
-  background-attachment: fixed;
-}
-
-/* timing-screen numerals */
+/* clean numeric / "timing" font */
 .mono {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-app-num), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
@@ -64,25 +64,84 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-@keyframes pulse-ring {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  70% { transform: scale(1.05); opacity: 0; }
-  100% { transform: scale(0.95); opacity: 0; }
-}
-
 .card {
-  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent) 0%, color-mix(in srgb, var(--surface-2) 88%, transparent) 100%);
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: 1.1rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .speed-tab {
   background:
     repeating-linear-gradient(
       -45deg,
-      rgba(255, 255, 255, 0.02) 0px,
-      rgba(255, 255, 255, 0.02) 8px,
+      rgba(255, 255, 255, 0.025) 0px,
+      rgba(255, 255, 255, 0.025) 8px,
       transparent 8px,
       transparent 16px
     );
+}
+
+/* ---------- timing-tower bars (F1 lock-screen style) ---------- */
+.tower-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.tower-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tower-ticks {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.35) 0px,
+    rgba(0, 0, 0, 0.35) 1px,
+    transparent 1px,
+    transparent 9px
+  );
+  pointer-events: none;
+}
+
+/* ---------- animations ---------- */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.8); }
+}
+.live-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise-in { animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(14px, -10px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+@keyframes float-leaf {
+  0% { transform: translateY(-8vh) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.55; }
+  90% { opacity: 0.55; }
+  100% { transform: translateY(110vh) translateX(40px) rotate(220deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rise-in, .live-dot { animation: none; }
 }

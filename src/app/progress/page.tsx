@@ -114,44 +114,44 @@ function Progress() {
           <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="proj" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00e0d1" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#00e0d1" stopOpacity={0} />
+                <stop offset="0%" stopColor="#5fc9a0" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#5fc9a0" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#2a2e36" strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid stroke="#2b3a31" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#8b909a", fontSize: 10 }}
+              tick={{ fill: "#97a89d", fontSize: 10 }}
               interval="preserveStartEnd"
               tickLine={false}
-              axisLine={{ stroke: "#2a2e36" }}
+              axisLine={{ stroke: "#2b3a31" }}
             />
             <YAxis
               domain={["dataMin - 2", "dataMax + 2"]}
-              tick={{ fill: "#8b909a", fontSize: 10 }}
+              tick={{ fill: "#97a89d", fontSize: 10 }}
               tickLine={false}
               axisLine={false}
               width={40}
             />
             <Tooltip
               contentStyle={{
-                background: "#131519",
-                border: "1px solid #2a2e36",
+                background: "#16201b",
+                border: "1px solid #2b3a31",
                 borderRadius: 12,
                 fontSize: 12,
               }}
-              labelStyle={{ color: "#8b909a" }}
+              labelStyle={{ color: "#97a89d" }}
             />
             <ReferenceLine
               y={profile.goal_weight_kg}
-              stroke="#e10600"
+              stroke="#e0876c"
               strokeDasharray="4 4"
-              label={{ value: "Goal", fill: "#e10600", fontSize: 10, position: "insideTopRight" }}
+              label={{ value: "Goal", fill: "#e0876c", fontSize: 10, position: "insideTopRight" }}
             />
             <Area
               type="monotone"
               dataKey="projected"
-              stroke="#00e0d1"
+              stroke="#5fc9a0"
               strokeWidth={2}
               fill="url(#proj)"
               name="Projected"
@@ -159,18 +159,18 @@ function Progress() {
             <Line
               type="monotone"
               dataKey="actual"
-              stroke="#fbbf24"
+              stroke="#e6c073"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#fbbf24" }}
+              dot={{ r: 3, fill: "#e6c073" }}
               connectNulls
               name="Actual"
             />
           </AreaChart>
         </ResponsiveContainer>
         <div className="mt-2 flex justify-center gap-4 text-[11px] text-muted">
-          <Legend color="#00e0d1" label="Projected" />
-          <Legend color="#fbbf24" label="Actual weigh-ins" />
-          <Legend color="#e10600" label="Goal" />
+          <Legend color="#5fc9a0" label="Projected" />
+          <Legend color="#e6c073" label="Actual weigh-ins" />
+          <Legend color="#e0876c" label="Goal" />
         </div>
       </div>
 

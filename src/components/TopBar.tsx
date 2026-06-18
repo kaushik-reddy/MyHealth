@@ -10,7 +10,7 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2.5">
           <div className="speed-tab flex h-8 w-8 items-center justify-center rounded-md bg-accent">
-            <span className="mono text-sm font-black text-white">MH</span>
+            <span className="mono text-sm font-black text-[#0e1512]">MH</span>
           </div>
           <div className="leading-tight">
             <h1 className="text-sm font-bold uppercase tracking-wider">{title}</h1>
