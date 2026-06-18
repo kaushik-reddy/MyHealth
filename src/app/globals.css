@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
+/* ===== Box-Box / F1 inspired theme ===== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0b0d;
+  --surface: #131519;
+  --surface-2: #1b1e24;
+  --surface-3: #23272f;
+  --foreground: #f4f5f7;
+  --muted: #8b909a;
+  --border: #2a2e36;
+
+  --accent: #e10600;        /* F1 red */
+  --accent-2: #00e0d1;      /* timing teal */
+  --accent-3: #fbbf24;      /* warning amber */
+  --green: #36d399;
+  --pink: #ff2d8c;
+  --purple: #9b6dff;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --color-green: var(--green);
+  --color-pink: var(--pink);
+  --color-purple: var(--purple);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
+html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-image:
+    radial-gradient(60% 50% at 50% 0%, rgba(225, 6, 0, 0.10) 0%, transparent 60%),
+    radial-gradient(40% 40% at 100% 100%, rgba(0, 224, 209, 0.06) 0%, transparent 60%);
+  background-attachment: fixed;
+}
+
+/* timing-screen numerals */
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  70% { transform: scale(1.05); opacity: 0; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+
+.card {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+}
+
+.speed-tab {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.02) 0px,
+      rgba(255, 255, 255, 0.02) 8px,
+      transparent 8px,
+      transparent 16px
+    );
 }
