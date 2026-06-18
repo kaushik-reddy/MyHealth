@@ -198,7 +198,7 @@ function DayRing({
             strokeDashoffset={offset}
             style={{
               transition: "stroke-dashoffset 0.6s cubic-bezier(0.22,1,0.36,1)",
-              filter: complete ? `drop-shadow(0 0 4px ${color})` : "none",
+              filter: complete ? `drop-shadow(0 0 2px ${color}99)` : "none",
             }}
           />
         )}

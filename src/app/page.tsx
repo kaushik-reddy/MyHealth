@@ -355,7 +355,7 @@ function HeroRing({
           strokeDashoffset={offset}
           style={{
             transition: "stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1)",
-            filter: complete ? "drop-shadow(0 0 10px rgba(52,211,153,0.7))" : "none",
+            filter: complete ? "drop-shadow(0 0 4px rgba(52,211,153,0.4))" : "none",
           }}
         />
       </svg>
@@ -366,7 +366,7 @@ function HeroRing({
               className="flex h-20 w-20 items-center justify-center rounded-full"
               style={{
                 background: "rgba(52,211,153,0.12)",
-                boxShadow: "0 0 28px rgba(52,211,153,0.45)",
+                boxShadow: "0 0 14px rgba(52,211,153,0.25)",
               }}
             >
               <svg width={48} height={48} viewBox="0 0 24 24" fill="none">
@@ -503,7 +503,7 @@ function SegmentBar({ pct, color }: { pct: number; color: string }) {
             style={{
               background: on ? color : "var(--surface-3)",
               opacity: on ? 1 : 0.6,
-              boxShadow: on ? `0 0 6px ${color}` : "none",
+              boxShadow: on ? `0 0 3px ${color}55` : "none",
             }}
           />
         );

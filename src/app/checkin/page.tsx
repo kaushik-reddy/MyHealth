@@ -95,7 +95,7 @@ function Checkin() {
               className="flex h-20 w-20 items-center justify-center rounded-full"
               style={{
                 background: "rgba(52,211,153,0.14)",
-                boxShadow: "0 0 30px rgba(52,211,153,0.5)",
+                boxShadow: "0 0 16px rgba(52,211,153,0.28)",
               }}
             >
               <svg width={52} height={52} viewBox="0 0 24 24" fill="none">

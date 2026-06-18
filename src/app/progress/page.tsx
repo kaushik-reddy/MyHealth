@@ -160,7 +160,7 @@ function Progress() {
                 <stop offset="100%" stopColor="#e11d48" />
               </linearGradient>
               <filter id="glowBlue" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.7" />
+                <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#3b82f6" floodOpacity="0.3" />
               </filter>
             </defs>
             <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
@@ -196,7 +196,7 @@ function Progress() {
                 <stop offset="100%" stopColor="#a5b4fc" stopOpacity={0} />
               </linearGradient>
               <filter id="glowPurple" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#a5b4fc" floodOpacity="0.8" />
+                <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#a5b4fc" floodOpacity="0.3" />
               </filter>
             </defs>
             <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
@@ -227,7 +227,7 @@ function Progress() {
                 <stop offset="100%" stopColor="#0891b2" />
               </linearGradient>
               <filter id="glowCyan" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#38bdf8" floodOpacity="0.7" />
+                <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#38bdf8" floodOpacity="0.3" />
               </filter>
             </defs>
             <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
@@ -259,7 +259,7 @@ function Progress() {
                     style={{
                       width: `${moodTotal ? (m.value / moodTotal) * 100 : 0}%`,
                       background: m.color,
-                      boxShadow: `0 0 10px ${m.color}`,
+                      boxShadow: `0 0 4px ${m.color}55`,
                     }}
                   />
                 </div>
@@ -280,7 +280,7 @@ function Progress() {
                 <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
               </linearGradient>
               <filter id="glowLine" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.8" />
+                <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#3b82f6" floodOpacity="0.3" />
               </filter>
             </defs>
             <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
