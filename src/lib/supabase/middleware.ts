@@ -9,8 +9,17 @@ export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // If Supabase isn't configured yet, don't block the app (demo mode).
-  if (!url || !key) return response;
+  // Only enforce auth when Supabase is genuinely configured (not blank and
+  // not the `.env.example` placeholders). Otherwise run in local demo mode
+  // and never block the app.
+  const configured =
+    !!url &&
+    !!key &&
+    url.startsWith("https://") &&
+    url.includes(".supabase.co") &&
+    !url.includes("YOUR-PROJECT") &&
+    !key.includes("YOUR-");
+  if (!configured) return response;
 
   const supabase = createServerClient(url, key, {
     cookies: {

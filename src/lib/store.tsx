@@ -21,6 +21,7 @@ import type {
 } from "@/lib/types";
 import { LocalRepo } from "@/lib/repo-local";
 import { SupabaseRepo } from "@/lib/repo-supabase";
+import { HybridRepo } from "@/lib/repo-hybrid";
 import { emptyLog, type Repo, uid } from "@/lib/repo";
 import { todayKey } from "@/lib/health";
 
@@ -114,13 +115,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!active) return;
         setUser(u);
         repoRef.current = u
-          ? new SupabaseRepo(sb, u.id)
+          ? new HybridRepo(new SupabaseRepo(sb, u.id), new LocalRepo())
           : new LocalRepo();
         sb.auth.onAuthStateChange((_e, session) => {
           const next = session?.user ?? null;
           setUser(next);
           repoRef.current = next
-            ? new SupabaseRepo(sb, next.id)
+            ? new HybridRepo(new SupabaseRepo(sb, next.id), new LocalRepo())
             : new LocalRepo();
           loadAll();
         });

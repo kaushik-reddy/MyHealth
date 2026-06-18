@@ -4,8 +4,8 @@
   "description": "Mobile-first health & fitness tracker: sugar, steps, calories and live weight-goal projection.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a1020",
-  "theme_color": "#0a1020",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
     {

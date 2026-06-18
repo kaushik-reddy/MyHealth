@@ -64,7 +64,11 @@ export default function OnboardingPage() {
       daily_water_goal_ml: 2500,
       daily_protein_goal_g: Math.round(weight * 1.6),
     };
-    await saveProfile(p);
+    try {
+      await saveProfile(p);
+    } catch {
+      /* profile is cached locally regardless; continue into the app */
+    }
     router.replace("/");
   }
 

@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
-/* ===== MyHealth — calm "blue" theme (multiple blue variations) ===== */
+/* ===== MyHealth — pitch-black theme with blue accents ===== */
 :root {
-  --background: #0a1020;
-  --surface: #111a30;
-  --surface-2: #16223c;
-  --surface-3: #1e2c4a;
+  --background: #000000;
+  --surface: #0a0d14;
+  --surface-2: #10141f;
+  --surface-3: #181d2a;
   --foreground: #eef3fb;
-  --muted: #93a4c4;
-  --border: #273755;
+  --muted: #8a93a8;
+  --border: #1e2535;
 
   --accent: #3b82f6;        /* primary blue */
   --accent-2: #38bdf8;      /* sky / cyan blue */

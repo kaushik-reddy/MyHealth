@@ -43,7 +43,7 @@ export default function Background() {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, #16284a 0%, #142546 35%, #101d3a 70%, #0a1020 100%)",
+            "linear-gradient(180deg, #060a14 0%, #04060c 40%, #000000 75%, #000000 100%)",
         }}
       />
 
@@ -53,8 +53,8 @@ export default function Background() {
         className="absolute left-1/2 top-[12%] h-56 w-56 -translate-x-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(96,165,250,0.32) 0%, rgba(56,189,248,0.12) 45%, transparent 70%)",
-          filter: "blur(6px)",
+            "radial-gradient(circle, rgba(59,130,246,0.20) 0%, rgba(56,189,248,0.07) 45%, transparent 70%)",
+          filter: "blur(8px)",
         }}
       />
 
@@ -63,8 +63,8 @@ export default function Background() {
         <svg viewBox="0 0 375 260" preserveAspectRatio="xMidYMax slice" className="h-[70vh] w-full">
           <path
             d="M0 180 Q90 120 190 165 T375 150 V260 H0 Z"
-            fill="#1c2f54"
-            opacity="0.85"
+            fill="#080c16"
+            opacity="0.9"
           />
         </svg>
       </div>
@@ -72,10 +72,10 @@ export default function Background() {
       {/* mid forest line */}
       <div ref={midRef} className="absolute inset-x-0 bottom-0">
         <svg viewBox="0 0 375 220" preserveAspectRatio="xMidYMax slice" className="h-[58vh] w-full">
-          <path d="M0 170 Q120 110 220 160 T375 140 V220 H0 Z" fill="#1a2b4e" opacity="0.92" />
+          <path d="M0 170 Q120 110 220 160 T375 140 V220 H0 Z" fill="#05080f" opacity="0.95" />
           {/* pine trees */}
           {[18, 60, 110, 165, 215, 270, 320, 355].map((x, i) => (
-            <Pine key={i} x={x} y={172 - (i % 3) * 6} s={0.9 + (i % 3) * 0.18} c="#15244380" />
+            <Pine key={i} x={x} y={172 - (i % 3) * 6} s={0.9 + (i % 3) * 0.18} c="#04060c" />
           ))}
         </svg>
       </div>
@@ -83,9 +83,9 @@ export default function Background() {
       {/* near foreground trees */}
       <div ref={nearRef} className="absolute inset-x-0 bottom-0">
         <svg viewBox="0 0 375 180" preserveAspectRatio="xMidYMax slice" className="h-[40vh] w-full">
-          <path d="M0 150 Q110 130 200 150 T375 145 V180 H0 Z" fill="#101b34" />
+          <path d="M0 150 Q110 130 200 150 T375 145 V180 H0 Z" fill="#000000" />
           {[-6, 70, 150, 250, 340].map((x, i) => (
-            <Pine key={i} x={x} y={160} s={1.5 + (i % 2) * 0.4} c="#0c1430" />
+            <Pine key={i} x={x} y={160} s={1.5 + (i % 2) * 0.4} c="#000000" />
           ))}
         </svg>
       </div>
@@ -113,7 +113,7 @@ export default function Background() {
 function Pine({ x, y, s, c }: { x: number; y: number; s: number; c: string }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`} style={{ transformOrigin: "center" }}>
-      <rect x="-1.5" y="0" width="3" height="10" fill="#152443" />
+      <rect x="-1.5" y="0" width="3" height="10" fill="#04060c" />
       <path d="M0 -26 L9 -6 L-9 -6 Z" fill={c} />
       <path d="M0 -18 L11 2 L-11 2 Z" fill={c} />
       <path d="M0 -10 L13 8 L-13 8 Z" fill={c} />
