@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 export function Segmented<T extends string>({
   options,
   value,
@@ -48,13 +50,39 @@ export function Stepper({
 }) {
   const clamp = (v: number) =>
     Math.min(max, Math.max(min, Math.round(v * 100) / 100));
+
+  const [raw, setRaw] = useState(String(value));
+  const focused = useRef(false);
+
+  // Sync from parent when not typing
+  useEffect(() => {
+    if (!focused.current) setRaw(String(value));
+  }, [value]);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setRaw(v);
+    // Skip intermediate states like "7." or empty
+    if (v === "" || v.endsWith(".") || v.endsWith(",")) return;
+    const n = parseFloat(v);
+    if (!isNaN(n)) onChange(clamp(n));
+  }
+
+  function handleBlur() {
+    focused.current = false;
+    const n = parseFloat(raw);
+    const clamped = isNaN(n) ? value : clamp(n);
+    onChange(clamped);
+    setRaw(String(clamped));
+  }
+
   return (
     <div>
       <span className="field-label">{label}</span>
       <div className="flex items-center gap-2.5">
         <button
           type="button"
-          onClick={() => onChange(clamp(value - step))}
+          onClick={() => { const next = clamp(value - step); onChange(next); setRaw(String(next)); }}
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-3 text-xl font-bold text-muted active:scale-90"
         >
           −
@@ -62,15 +90,17 @@ export function Stepper({
         <div className="field flex flex-1 items-baseline justify-center gap-1 py-3">
           <input
             inputMode="decimal"
-            value={value}
-            onChange={(e) => onChange(clamp(Number(e.target.value) || 0))}
+            value={raw}
+            onFocus={() => { focused.current = true; }}
+            onChange={handleChange}
+            onBlur={handleBlur}
             className="display w-24 bg-transparent text-center text-xl font-light outline-none"
           />
           {unit && <span className="text-xs text-muted">{unit}</span>}
         </div>
         <button
           type="button"
-          onClick={() => onChange(clamp(value + step))}
+          onClick={() => { const next = clamp(value + step); onChange(next); setRaw(String(next)); }}
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-xl font-bold text-white active:scale-90"
         >
           +
@@ -93,15 +123,44 @@ export function NumberField({
   unit?: string;
   placeholder?: string;
 }) {
+  const [raw, setRaw] = useState(value === "" ? "" : String(value));
+  const focused = useRef(false);
+
+  useEffect(() => {
+    if (!focused.current)
+      setRaw(value === "" ? "" : String(value));
+  }, [value]);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setRaw(v);
+    if (v === "" || v.endsWith(".") || v.endsWith(",")) return;
+    const n = parseFloat(v);
+    if (!isNaN(n)) onChange(n);
+  }
+
+  function handleBlur() {
+    focused.current = false;
+    const n = parseFloat(raw);
+    if (!isNaN(n)) {
+      onChange(n);
+      setRaw(String(n));
+    } else {
+      setRaw(value === "" ? "" : String(value));
+    }
+  }
+
   return (
     <label className="block">
       <span className="field-label">{label}</span>
       <div className="field flex items-center px-3.5">
         <input
           inputMode="decimal"
-          value={value}
+          value={raw}
           placeholder={placeholder}
-          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          onFocus={() => { focused.current = true; }}
+          onChange={handleChange}
+          onBlur={handleBlur}
           className="display w-full bg-transparent py-3 text-base font-light outline-none"
         />
         {unit && <span className="ml-1 text-xs text-muted">{unit}</span>}

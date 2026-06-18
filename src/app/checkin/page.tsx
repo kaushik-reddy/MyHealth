@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import Collapsible from "@/components/Collapsible";
@@ -52,6 +52,8 @@ function Checkin() {
   } = useStore();
   const searchParams = useSearchParams();
   const [saved, setSaved] = useState(false);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync the store's selected day with the ?date= query param. Defaults to
   // today, and resets back to today when leaving the page.
@@ -65,9 +67,14 @@ function Checkin() {
 
   if (!profile) return null;
 
+  // Debounced: popup appears only after 1.2s of no further saves.
   const flash = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1600);
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    if (hideTimer.current)  clearTimeout(hideTimer.current);
+    flashTimer.current = setTimeout(() => {
+      setSaved(true);
+      hideTimer.current = setTimeout(() => setSaved(false), 1600);
+    }, 1200);
   };
 
   async function setSteps(steps: number) {
