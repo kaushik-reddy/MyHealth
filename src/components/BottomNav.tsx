@@ -36,9 +36,12 @@ export default function BottomNav() {
                 <span
                   className="absolute inset-0 rounded-2xl"
                   style={{
-                    background:
-                      "linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 75%, black))",
-                    boxShadow: "0 4px 14px color-mix(in srgb, var(--accent) 45%, transparent)",
+                    background: "rgba(255, 255, 255, 0.16)",
+                    border: "1px solid rgba(255, 255, 255, 0.22)",
+                    boxShadow:
+                      "inset 0 1px 0 rgba(255, 255, 255, 0.30), 0 2px 10px rgba(0, 0, 0, 0.25)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
                   }}
                 />
               )}

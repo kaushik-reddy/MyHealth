@@ -183,6 +183,13 @@ function Dashboard() {
 
   // overall day completion across all goals (sugar = adherence to staying under)
   const dayProgress = useMemo(() => {
+    const anyLogged =
+      todayLog.calories_intake > 0 ||
+      todayLog.steps > 0 ||
+      todayLog.protein_g > 0 ||
+      todayLog.water_ml > 0 ||
+      todayLog.sugar_g > 0;
+    if (!anyLogged) return 0;
     const parts = goals.map((g) => {
       if (g.max <= 0) return 0;
       if (g.invert) return g.value <= g.max ? 1 : Math.max(0, g.max / g.value);

@@ -15,7 +15,7 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
 
   return (
     <header className="sticky top-0 z-30 bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-center justify-between px-5 pb-2 pt-5">
+      <div className="mx-auto flex max-w-md items-center justify-between px-5 pb-2 pt-[max(1.25rem,calc(env(safe-area-inset-top)+0.35rem))]">
         <div className="leading-tight">
           <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
           {subtitle && (
