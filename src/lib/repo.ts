@@ -49,7 +49,14 @@ export function emptyLog(date: string): DailyLog {
 }
 
 export function uid() {
-  return (
-    Date.now().toString(36) + Math.random().toString(36).slice(2, 9)
-  );
+  // Generate a real UUID so ids are valid for Supabase `uuid` columns as well
+  // as localStorage. Falls back to a manual v4 if crypto.randomUUID is missing.
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }

@@ -126,7 +126,7 @@ function Dashboard() {
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="speed-tab flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-              <span className="mono text-sm font-extrabold text-[#0e1512]">MH</span>
+              <span className="mono text-sm font-extrabold text-white">MH</span>
             </div>
             <div className="leading-tight">
               <p className="text-xs font-bold">Race progress</p>
@@ -164,7 +164,7 @@ function Dashboard() {
               {Math.round(net)}
             </p>
             <p className="text-xs text-muted">
-              {net <= 0 ? "Deficit — on track 🌿" : "Surplus — ease off"}
+              {net <= 0 ? "Deficit — on track 💧" : "Surplus — ease off"}
             </p>
           </div>
           <div className="text-right text-xs">
@@ -220,7 +220,7 @@ function Dashboard() {
 
       <Link
         href="/checkin"
-        className="block rounded-xl bg-accent py-3.5 text-center text-sm font-bold uppercase tracking-wide text-[#0e1512] transition active:scale-[0.98]"
+        className="block rounded-xl bg-accent py-3.5 text-center text-sm font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
       >
         + Daily check-in
       </Link>

@@ -43,17 +43,17 @@ export default function Background() {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, #14241d 0%, #16291f 35%, #112019 70%, #0e1512 100%)",
+            "linear-gradient(180deg, #16284a 0%, #142546 35%, #101d3a 70%, #0a1020 100%)",
         }}
       />
 
-      {/* soft sun glow */}
+      {/* soft moon glow */}
       <div
         ref={sunRef}
         className="absolute left-1/2 top-[12%] h-56 w-56 -translate-x-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(230,192,115,0.30) 0%, rgba(95,201,160,0.10) 45%, transparent 70%)",
+            "radial-gradient(circle, rgba(96,165,250,0.32) 0%, rgba(56,189,248,0.12) 45%, transparent 70%)",
           filter: "blur(6px)",
         }}
       />
@@ -63,7 +63,7 @@ export default function Background() {
         <svg viewBox="0 0 375 260" preserveAspectRatio="xMidYMax slice" className="h-[70vh] w-full">
           <path
             d="M0 180 Q90 120 190 165 T375 150 V260 H0 Z"
-            fill="#1b2c23"
+            fill="#1c2f54"
             opacity="0.85"
           />
         </svg>
@@ -72,10 +72,10 @@ export default function Background() {
       {/* mid forest line */}
       <div ref={midRef} className="absolute inset-x-0 bottom-0">
         <svg viewBox="0 0 375 220" preserveAspectRatio="xMidYMax slice" className="h-[58vh] w-full">
-          <path d="M0 170 Q120 110 220 160 T375 140 V220 H0 Z" fill="#203429" opacity="0.92" />
+          <path d="M0 170 Q120 110 220 160 T375 140 V220 H0 Z" fill="#1a2b4e" opacity="0.92" />
           {/* pine trees */}
           {[18, 60, 110, 165, 215, 270, 320, 355].map((x, i) => (
-            <Pine key={i} x={x} y={172 - (i % 3) * 6} s={0.9 + (i % 3) * 0.18} c="#172a20" />
+            <Pine key={i} x={x} y={172 - (i % 3) * 6} s={0.9 + (i % 3) * 0.18} c="#15244380" />
           ))}
         </svg>
       </div>
@@ -83,9 +83,9 @@ export default function Background() {
       {/* near foreground trees */}
       <div ref={nearRef} className="absolute inset-x-0 bottom-0">
         <svg viewBox="0 0 375 180" preserveAspectRatio="xMidYMax slice" className="h-[40vh] w-full">
-          <path d="M0 150 Q110 130 200 150 T375 145 V180 H0 Z" fill="#142019" />
+          <path d="M0 150 Q110 130 200 150 T375 145 V180 H0 Z" fill="#101b34" />
           {[-6, 70, 150, 250, 340].map((x, i) => (
-            <Pine key={i} x={x} y={160} s={1.5 + (i % 2) * 0.4} c="#0f1a14" />
+            <Pine key={i} x={x} y={160} s={1.5 + (i % 2) * 0.4} c="#0c1430" />
           ))}
         </svg>
       </div>
@@ -113,7 +113,7 @@ export default function Background() {
 function Pine({ x, y, s, c }: { x: number; y: number; s: number; c: string }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`} style={{ transformOrigin: "center" }}>
-      <rect x="-1.5" y="0" width="3" height="10" fill="#15211a" />
+      <rect x="-1.5" y="0" width="3" height="10" fill="#152443" />
       <path d="M0 -26 L9 -6 L-9 -6 Z" fill={c} />
       <path d="M0 -18 L11 2 L-11 2 Z" fill={c} />
       <path d="M0 -10 L13 8 L-13 8 Z" fill={c} />
@@ -122,11 +122,11 @@ function Pine({ x, y, s, c }: { x: number; y: number; s: number; c: string }) {
 }
 
 const LEAVES = [
-  { emoji: "🍃", left: 8, dur: 22, delay: 0 },
-  { emoji: "🌿", left: 22, dur: 28, delay: 4 },
-  { emoji: "🍃", left: 40, dur: 24, delay: 9 },
-  { emoji: "🍏", left: 58, dur: 30, delay: 2 },
-  { emoji: "🍃", left: 72, dur: 26, delay: 7 },
-  { emoji: "🥑", left: 86, dur: 32, delay: 12 },
-  { emoji: "🌿", left: 94, dur: 27, delay: 15 },
+  { emoji: "💧", left: 8, dur: 22, delay: 0 },
+  { emoji: "❄️", left: 22, dur: 28, delay: 4 },
+  { emoji: "💧", left: 40, dur: 24, delay: 9 },
+  { emoji: "🫐", left: 58, dur: 30, delay: 2 },
+  { emoji: "✨", left: 72, dur: 26, delay: 7 },
+  { emoji: "💧", left: 86, dur: 32, delay: 12 },
+  { emoji: "❄️", left: 94, dur: 27, delay: 15 },
 ];

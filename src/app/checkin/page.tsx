@@ -168,7 +168,7 @@ function WeightInput({ current, onSave }: { current: number; onSave: (kg: number
       </div>
       <button
         onClick={() => onSave(kg)}
-        className="rounded-lg bg-accent px-4 py-2.5 text-xs font-bold uppercase text-[#0e1512] transition active:scale-95"
+        className="rounded-lg bg-accent px-4 py-2.5 text-xs font-bold uppercase text-white transition active:scale-95"
       >
         Log
       </button>
@@ -428,7 +428,7 @@ function PickRow({
                 setOpen(false);
                 setQty(1);
               }}
-              className="shrink-0 rounded-md bg-accent px-3 py-1.5 text-[11px] font-bold uppercase text-[#0e1512] transition active:scale-95"
+              className="shrink-0 rounded-md bg-accent px-3 py-1.5 text-[11px] font-bold uppercase text-white transition active:scale-95"
             >
               Add
             </button>
@@ -512,7 +512,7 @@ function EditFoodForm({
               category: category.trim() || null,
             })
           }
-          className="flex-1 rounded-lg bg-accent py-2 text-[11px] font-bold uppercase tracking-wide text-[#0e1512] transition active:scale-[0.98]"
+          className="flex-1 rounded-lg bg-accent py-2 text-[11px] font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
         >
           Save details
         </button>
@@ -595,7 +595,7 @@ function NewFoodForm({
               1
             );
           }}
-          className="flex-1 rounded-lg bg-accent py-2.5 text-xs font-bold uppercase tracking-wide text-[#0e1512] transition active:scale-[0.98]"
+          className="flex-1 rounded-lg bg-accent py-2.5 text-xs font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
         >
           Save & add
         </button>

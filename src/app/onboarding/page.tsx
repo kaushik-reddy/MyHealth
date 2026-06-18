@@ -239,7 +239,7 @@ export default function OnboardingPage() {
         {step < STEPS.length - 1 ? (
           <button
             onClick={() => setStep((s) => s + 1)}
-            className="flex-1 rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-[#0e1512]"
+            className="flex-1 rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white"
           >
             Next
           </button>
@@ -247,7 +247,7 @@ export default function OnboardingPage() {
           <button
             onClick={finish}
             disabled={busy}
-            className="flex-1 rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-[#0e1512] disabled:opacity-60"
+            className="flex-1 rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
           >
             {busy ? "Saving…" : "Start racing"}
           </button>

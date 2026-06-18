@@ -50,7 +50,7 @@ export default function LoginPage() {
       <Background />
       <div className="mb-8 text-center">
         <div className="speed-tab mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent">
-          <span className="mono text-2xl font-black text-[#0e1512]">MH</span>
+          <span className="mono text-2xl font-black text-white">MH</span>
         </div>
         <h1 className="text-2xl font-black uppercase tracking-tight">MyHealth</h1>
         <p className="mt-1 text-sm text-muted">
@@ -67,7 +67,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setMode(m)}
                 className={`flex-1 rounded-md py-2 text-xs font-bold uppercase tracking-wide transition ${
-                  mode === m ? "bg-accent text-[#0e1512]" : "text-muted"
+                  mode === m ? "bg-accent text-white" : "text-muted"
                 }`}
               >
                 {m === "signin" ? "Sign in" : "Sign up"}
@@ -106,7 +106,7 @@ export default function LoginPage() {
 
           <button
             disabled={busy}
-            className="w-full rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-[#0e1512] disabled:opacity-60"
+            className="w-full rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
           >
             {busy ? "Lights out…" : mode === "signin" ? "Go racing" : "Create account"}
           </button>
@@ -120,7 +120,7 @@ export default function LoginPage() {
           </p>
           <button
             onClick={() => router.replace("/")}
-            className="w-full rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-[#0e1512]"
+            className="w-full rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white"
           >
             Enter demo mode
           </button>

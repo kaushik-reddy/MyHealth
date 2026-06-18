@@ -101,7 +101,7 @@ function Sugar() {
         </div>
         <button
           onClick={add}
-          className="w-full rounded-lg bg-accent py-2.5 text-xs font-bold uppercase tracking-wide text-[#0e1512]"
+          className="w-full rounded-lg bg-accent py-2.5 text-xs font-bold uppercase tracking-wide text-white"
         >
           Save item
         </button>

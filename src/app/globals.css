@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
-/* ===== MyHealth — calm "forest paddock" theme ===== */
+/* ===== MyHealth — calm "blue" theme (multiple blue variations) ===== */
 :root {
-  --background: #0e1512;
-  --surface: #16201b;
-  --surface-2: #1d2922;
-  --surface-3: #26332b;
-  --foreground: #eef2ee;
-  --muted: #97a89d;
-  --border: #2b3a31;
+  --background: #0a1020;
+  --surface: #111a30;
+  --surface-2: #16223c;
+  --surface-3: #1e2c4a;
+  --foreground: #eef3fb;
+  --muted: #93a4c4;
+  --border: #273755;
 
-  --accent: #5fc9a0;        /* calm sage / mint — primary */
-  --accent-2: #7fb6e6;      /* soft sky blue */
-  --accent-3: #e6c073;      /* warm sand */
-  --green: #6fcf97;
-  --pink: #e3a3b4;          /* muted rose */
-  --purple: #b3a7e6;        /* soft lavender */
-  --danger: #e0876c;        /* soft terracotta (used sparingly) */
+  --accent: #3b82f6;        /* primary blue */
+  --accent-2: #38bdf8;      /* sky / cyan blue */
+  --accent-3: #60a5fa;      /* soft azure */
+  --green: #34d399;         /* keep a calm success teal-green */
+  --pink: #818cf8;          /* indigo (replaces pink) */
+  --purple: #a5b4fc;        /* periwinkle */
+  --danger: #f87171;        /* soft red, used sparingly */
 }
 
 @theme inline {
