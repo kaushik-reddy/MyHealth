@@ -75,7 +75,7 @@ function ProfileEditor() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {saved && (
         <div className="rounded-lg border border-green/40 bg-green/10 px-3 py-2 text-center text-xs font-semibold text-green">
           Setup saved ✓

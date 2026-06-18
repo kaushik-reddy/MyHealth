@@ -14,16 +14,13 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <div className="speed-tab flex h-8 w-8 items-center justify-center rounded-md bg-accent">
-            <span className="mono text-sm font-black text-white">MH</span>
-          </div>
-          <div className="leading-tight">
-            <h1 className="text-sm font-bold uppercase tracking-wider">{title}</h1>
-            {subtitle && <p className="text-[11px] text-muted">{subtitle}</p>}
-          </div>
+    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur">
+      <div className="mx-auto flex max-w-md items-center justify-between px-5 pb-2 pt-5">
+        <div className="leading-tight">
+          <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+          {subtitle && (
+            <p className="mt-0.5 text-xs text-muted">{subtitle}</p>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -35,7 +32,7 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
           <Link
             href="/profile"
             aria-label="Profile"
-            className="block h-9 w-9 overflow-hidden rounded-full border border-border bg-surface-2"
+            className="block h-10 w-10 overflow-hidden rounded-full border border-border bg-surface-2"
           >
             {profile?.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -45,7 +42,7 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span className="flex h-full w-full items-center justify-center text-xs font-bold text-muted">
+              <span className="flex h-full w-full items-center justify-center text-sm font-bold text-muted">
                 {initials}
               </span>
             )}

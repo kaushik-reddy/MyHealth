@@ -14,7 +14,14 @@ import {
 
 export default function DashboardPage() {
   return (
-    <AppShell title="Today" subtitle={new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}>
+    <AppShell
+      title="Today"
+      subtitle={new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+      })}
+    >
       <Dashboard />
     </AppShell>
   );
@@ -22,22 +29,44 @@ export default function DashboardPage() {
 
 function Dashboard() {
   const { profile, todayLog, logs } = useStore();
+
+  const maintenance = profile
+    ? tdee(
+        profile.sex,
+        profile.current_weight_kg,
+        profile.height_cm,
+        profile.age,
+        profile.activity_level
+      )
+    : 0;
+
+  const recent = useMemo(
+    () => logs.slice(-14).filter((l) => l.calories_intake > 0),
+    [logs]
+  );
+
+  const streak = useMemo(() => {
+    const set = new Set(
+      logs
+        .filter((l) => l.steps || l.calories_intake || l.water_ml)
+        .map((l) => l.log_date)
+    );
+    let s = 0;
+    const d = new Date();
+    while (set.has(d.toISOString().slice(0, 10))) {
+      s++;
+      d.setDate(d.getDate() - 1);
+    }
+    return s;
+  }, [logs]);
+
   if (!profile) return null;
 
-  const maintenance = tdee(
-    profile.sex,
-    profile.current_weight_kg,
-    profile.height_cm,
-    profile.age,
-    profile.activity_level
-  );
   const burned = maintenance + todayLog.active_calories;
   const net = todayLog.calories_intake - burned;
   const bmiVal = bmi(profile.current_weight_kg, profile.height_cm);
   const bmiCat = bmiCategory(bmiVal);
 
-  // 14-day averages for projection.
-  const recent = useMemo(() => logs.slice(-14).filter((l) => l.calories_intake > 0), [logs]);
   const avgIntake =
     recent.length > 0
       ? recent.reduce((s, l) => s + l.calories_intake, 0) / recent.length
@@ -50,242 +79,281 @@ function Dashboard() {
   const { reachDays } = projectWeight(profile, avgIntake, avgBurn);
   const reachDate = formatReachDate(reachDays);
 
-  // streak: consecutive days with any log ending today.
-  const streak = useMemo(() => {
-    const set = new Set(logs.filter((l) => l.steps || l.calories_intake || l.water_ml).map((l) => l.log_date));
-    let s = 0;
-    const d = new Date();
-    while (set.has(d.toISOString().slice(0, 10))) {
-      s++;
-      d.setDate(d.getDate() - 1);
-    }
-    return s;
-  }, [logs]);
-
   const toGo = profile.current_weight_kg - profile.goal_weight_kg;
+  const remaining = Math.max(
+    0,
+    profile.daily_calorie_target - todayLog.calories_intake
+  );
 
-  // Build timing-tower rows (sorted by completion, like a live leaderboard).
-  const rows: TowerRow[] = [
-    {
-      key: "intake",
-      label: "Calories",
-      sub: "intake vs target",
-      value: todayLog.calories_intake,
-      max: profile.daily_calorie_target,
-      unit: "kcal",
-      color: "var(--accent)",
-    },
+  const goals: GoalRow[] = [
     {
       key: "steps",
       label: "Steps",
-      sub: `${todayLog.distance_km.toFixed(1)} km walked`,
       value: todayLog.steps,
       max: profile.daily_step_goal,
       unit: "",
-      color: "var(--accent-2)",
+      color: "#3b82f6",
+      icon: "👟",
     },
     {
       key: "protein",
       label: "Protein",
-      sub: "muscle fuel",
       value: todayLog.protein_g,
       max: profile.daily_protein_goal_g,
       unit: "g",
-      color: "var(--green)",
+      color: "#34d399",
+      icon: "🥩",
     },
     {
       key: "water",
       label: "Water",
-      sub: "hydration",
       value: todayLog.water_ml,
       max: profile.daily_water_goal_ml,
       unit: "ml",
-      color: "var(--purple)",
+      color: "#38bdf8",
+      icon: "💧",
     },
     {
       key: "sugar",
       label: "Sugar",
-      sub: "stay under the limit",
       value: todayLog.sugar_g,
       max: profile.daily_sugar_limit_g,
       unit: "g",
-      color: "var(--pink)",
+      color: "#818cf8",
+      icon: "🍬",
       invert: true,
     },
   ];
-  const ranked = rows
-    .map((r) => ({ ...r, pct: r.max > 0 ? r.value / r.max : 0 }))
-    .sort((a, b) =>
-      (a.invert ? 1 - a.pct : b.pct) - (a.invert ? 1 - b.pct : a.pct)
-    );
 
   return (
-    <div className="space-y-4">
-      {/* Lock-screen style live "daily progress" notification */}
-      <div className="card rise-in overflow-hidden p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="speed-tab flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-              <span className="mono text-sm font-extrabold text-white">MH</span>
-            </div>
-            <div className="leading-tight">
-              <p className="text-xs font-bold">Daily progress</p>
-              <p className="text-[10px] text-muted">MyHealth · now</p>
-            </div>
-          </div>
-          <span className="flex items-center gap-1.5 rounded-full bg-surface-3 px-2 py-1">
-            <span className="live-dot h-1.5 w-1.5 rounded-full bg-accent" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
-              Live
+    <div className="space-y-6">
+      {/* ===== Hero: calorie ring ===== */}
+      <section className="rise-in flex flex-col items-center pt-2">
+        <HeroRing
+          value={todayLog.calories_intake}
+          max={profile.daily_calorie_target}
+        />
+        <p className="mt-5 text-sm text-muted">
+          {remaining > 0 ? (
+            <>
+              <span className="font-semibold text-foreground">
+                {remaining.toLocaleString()} kcal
+              </span>{" "}
+              left today
+            </>
+          ) : (
+            <span className="font-semibold text-danger">
+              Daily target reached
             </span>
-          </span>
-        </div>
+          )}
+        </p>
+      </section>
 
-        <div className="space-y-2.5">
-          {ranked.map((r, i) => (
-            <TowerRowView key={r.key} pos={i + 1} row={r} />
-          ))}
-        </div>
-      </div>
+      {/* ===== Eaten / Burned / Balance ===== */}
+      <section className="rise-in grid grid-cols-3 gap-3">
+        <Tally label="Eaten" value={Math.round(todayLog.calories_intake)} />
+        <Tally label="Burned" value={Math.round(burned)} />
+        <Tally
+          label="Balance"
+          value={Math.round(net)}
+          signed
+          color={net <= 0 ? "var(--green)" : "var(--danger)"}
+        />
+      </section>
 
-      {/* Energy balance */}
-      <div className="card rise-in relative overflow-hidden p-5">
-        <div className="speed-tab absolute inset-0 opacity-40" />
-        <div className="relative flex items-center justify-between">
-          <div>
-            <p className="text-[11px] uppercase tracking-widest text-muted">
-              Energy balance
-            </p>
-            <p
-              className="mono text-3xl font-extrabold"
-              style={{ color: net <= 0 ? "var(--green)" : "var(--danger)" }}
-            >
-              {net > 0 ? "+" : ""}
-              {Math.round(net)}
-            </p>
-            <p className="text-xs text-muted">
-              {net <= 0 ? "Deficit — on track 💧" : "Surplus — ease off"}
-            </p>
-          </div>
-          <div className="text-right text-xs">
-            <Row label="In" value={`${Math.round(todayLog.calories_intake)}`} />
-            <Row label="Burn" value={`${Math.round(burned)}`} />
-            <Row label="Goal" value={`${profile.daily_calorie_target}`} />
-          </div>
-        </div>
-      </div>
+      {/* ===== Today's goals ===== */}
+      <section className="rise-in space-y-3">
+        <h2 className="px-1 text-xs font-bold uppercase tracking-[0.2em] text-muted">
+          Today&apos;s goals
+        </h2>
+        {goals.map((g) => (
+          <GoalCard key={g.key} row={g} />
+        ))}
+      </section>
 
-      {/* Projection summary */}
-      <Link href="/progress" className="card rise-in block p-5">
+      {/* ===== Journey to goal ===== */}
+      <Link href="/progress" className="card rise-in block p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-widest text-muted">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
               Journey to goal
             </p>
-            <p className="mono text-2xl font-extrabold">
+            <p className="display mt-2 text-4xl font-light">
               {Math.abs(toGo).toFixed(1)}
-              <span className="text-sm font-medium text-muted"> kg to go</span>
+              <span className="ml-1 text-base font-normal text-muted">
+                kg to go
+              </span>
             </p>
             {reachDate ? (
-              <p className="text-xs text-accent-2">
-                ETA {reachDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                {reachDays !== null && ` · ${reachDays}d`}
+              <p className="mt-2 text-xs text-accent-2">
+                Est.{" "}
+                {reachDate.toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </p>
             ) : (
-              <p className="text-xs text-muted">
+              <p className="mt-2 text-xs text-muted">
                 Log meals to forecast your goal date
               </p>
             )}
           </div>
-          <div className="text-right">
-            <span className="text-2xl">�</span>
-            <p className="mt-1 text-[10px] uppercase tracking-wide text-muted">
-              View chart →
-            </p>
-          </div>
+          <span className="chip" style={{ background: "#3b82f622" }}>
+            <Arrow />
+          </span>
         </div>
       </Link>
 
-      {/* mini stats row */}
-      <div className="grid grid-cols-3 gap-2">
-        <MiniCard label="BMI" value={bmiVal.toFixed(1)} tint={bmiCat.color} sub={bmiCat.label} />
-        <MiniCard label="Streak" value={`${streak}`} tint="var(--accent-3)" sub="days" />
+      {/* ===== Mini stats ===== */}
+      <section className="rise-in grid grid-cols-3 gap-3">
+        <MiniCard
+          label="BMI"
+          value={bmiVal.toFixed(1)}
+          sub={bmiCat.label}
+          tint={bmiCat.color}
+        />
+        <MiniCard label="Streak" value={`${streak}`} sub="days" tint="#60a5fa" />
         <MiniCard
           label="Distance"
           value={todayLog.distance_km.toFixed(1)}
-          tint="var(--accent-2)"
           sub="km today"
+          tint="#38bdf8"
         />
-      </div>
+      </section>
 
       <Link
         href="/checkin"
-        className="block rounded-xl bg-accent py-3.5 text-center text-sm font-bold uppercase tracking-wide text-white transition active:scale-[0.98]"
+        className="block rounded-full bg-accent py-4 text-center text-sm font-bold uppercase tracking-wider text-white transition active:scale-[0.98]"
       >
-        + Daily check-in
+        Daily check-in
       </Link>
     </div>
   );
 }
 
-interface TowerRow {
+/* ---------- Hero ring ---------- */
+function HeroRing({ value, max }: { value: number; max: number }) {
+  const size = 220;
+  const stroke = 16;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = max > 0 ? Math.min(value / max, 1) : 0;
+  const offset = c * (1 - pct);
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <defs>
+          <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#38bdf8" />
+          </linearGradient>
+        </defs>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="var(--surface-3)"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="url(#hero)"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          style={{
+            transition: "stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1)",
+          }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="display text-5xl font-light">
+          {Math.round(value).toLocaleString()}
+        </span>
+        <span className="mt-1 text-xs uppercase tracking-[0.2em] text-muted">
+          of {max.toLocaleString()} kcal
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Tally ---------- */
+function Tally({
+  label,
+  value,
+  signed,
+  color,
+}: {
+  label: string;
+  value: number;
+  signed?: boolean;
+  color?: string;
+}) {
+  return (
+    <div className="text-center">
+      <p className="display text-2xl font-light" style={{ color }}>
+        {signed && value > 0 ? "+" : ""}
+        {value.toLocaleString()}
+      </p>
+      <p className="mt-1 text-[10px] uppercase tracking-wider text-muted">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+interface GoalRow {
   key: string;
   label: string;
-  sub: string;
   value: number;
   max: number;
   unit: string;
   color: string;
+  icon: string;
   invert?: boolean;
 }
 
-function TowerRowView({ pos, row }: { pos: number; row: TowerRow & { pct?: number } }) {
-  const pct = row.max > 0 ? row.value / row.max : 0;
+/* ---------- Goal card (Box Box style row) ---------- */
+function GoalCard({ row }: { row: GoalRow }) {
+  const pct = row.max > 0 ? Math.min(row.value / row.max, 1) : 0;
   const over = row.invert && row.value > row.max;
-  const fillColor = over ? "var(--danger)" : row.color;
+  const color = over ? "var(--danger)" : row.color;
   return (
-    <div className="flex items-center gap-3">
-      <span
-        className="mono flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold"
-        style={{ background: `${fillColor}22`, color: fillColor }}
-      >
-        {pos}
+    <div className="stat-row flex items-center gap-4 p-4">
+      <span className="chip text-xl" style={{ background: `${row.color}1f` }}>
+        {row.icon}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="mb-1 flex items-baseline justify-between gap-2">
-          <span className="truncate text-xs font-semibold">{row.label}</span>
-          <span className="mono shrink-0 text-xs font-bold">
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm font-semibold">{row.label}</span>
+          <span className="display text-lg font-light">
             {Math.round(row.value).toLocaleString()}
-            <span className="text-[10px] font-normal text-muted">
+            <span className="ml-0.5 text-xs text-muted">
               /{Math.round(row.max).toLocaleString()}
               {row.unit && ` ${row.unit}`}
             </span>
           </span>
         </div>
-        <div className="tower-bar">
+        <div className="tower-bar mt-2.5">
           <div
             className="tower-fill"
-            style={{
-              width: `${Math.min(pct, 1) * 100}%`,
-              background: `linear-gradient(90deg, ${fillColor}, color-mix(in srgb, ${fillColor} 60%, white))`,
-            }}
+            style={{ width: `${pct * 100}%`, background: color }}
           />
-          <div className="tower-ticks" />
         </div>
       </div>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-end gap-2">
-      <span className="text-muted">{label}</span>
-      <span className="mono w-12 text-right font-bold">{value}</span>
-    </div>
-  );
-}
-
+/* ---------- Mini stat ---------- */
 function MiniCard({
   label,
   value,
@@ -298,12 +366,28 @@ function MiniCard({
   tint: string;
 }) {
   return (
-    <div className="card p-3 text-center">
-      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
-      <p className="mono text-xl font-black" style={{ color: tint }}>
+    <div className="card p-4 text-center">
+      <p className="text-[10px] uppercase tracking-wider text-muted">{label}</p>
+      <p className="display mt-1.5 text-2xl font-light" style={{ color: tint }}>
         {value}
       </p>
-      <p className="text-[10px] text-muted">{sub}</p>
+      <p className="mt-0.5 text-[10px] text-muted">{sub}</p>
     </div>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="#3b82f6"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }

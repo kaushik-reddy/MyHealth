@@ -57,7 +57,7 @@ function Sugar() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Today's sugar gauge */}
       <div className="card p-5">
         <div className="flex items-baseline justify-between">

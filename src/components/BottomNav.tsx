@@ -15,26 +15,22 @@ const items = [
 export default function BottomNav() {
   const path = usePathname();
   return (
-    <nav className="sticky bottom-0 z-30 border-t border-border bg-surface/90 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
+    <nav className="pointer-events-none sticky bottom-0 z-30 px-4 pb-5 pt-2">
+      <div className="nav-pill pointer-events-auto mx-auto flex max-w-xs items-center justify-between px-2 py-2">
         {items.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? path === "/" : path.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
-              className="flex flex-1 flex-col items-center gap-1 py-2.5"
+              aria-label={label}
+              className="flex h-11 w-11 items-center justify-center rounded-full transition active:scale-90"
+              style={{ background: active ? "var(--accent)" : "transparent" }}
             >
               <Icon
-                className="h-6 w-6"
-                style={{ color: active ? "var(--accent)" : "var(--muted)" }}
+                className="h-5 w-5"
+                style={{ color: active ? "#fff" : "var(--muted)" }}
               />
-              <span
-                className="text-[10px] font-medium uppercase tracking-wide"
-                style={{ color: active ? "var(--foreground)" : "var(--muted)" }}
-              >
-                {label}
-              </span>
             </Link>
           );
         })}

@@ -61,7 +61,7 @@ function CalendarView() {
   const selectedLog = logByDate.get(selected);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Month switcher */}
       <div className="card flex items-center justify-between p-2">
         <button

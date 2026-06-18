@@ -63,7 +63,7 @@ function Checkin() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* smooth floating toast */}
       <div
         className={`pointer-events-none fixed left-1/2 top-16 z-40 -translate-x-1/2 rounded-full border border-green/40 bg-green/15 px-4 py-1.5 text-xs font-semibold text-green backdrop-blur transition-all duration-300 ${

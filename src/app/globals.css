@@ -3,12 +3,12 @@
 /* ===== MyHealth — all-black theme with blue accents ===== */
 :root {
   --background: #000000;
-  --surface: #000000;
-  --surface-2: #050505;
-  --surface-3: #0d0d0f;
-  --foreground: #eef3fb;
-  --muted: #8a93a8;
-  --border: #1b1b22;
+  --surface: #0a0a0c;
+  --surface-2: #101013;
+  --surface-3: #1a1a20;
+  --foreground: #f4f6fb;
+  --muted: #8a8f9e;
+  --border: #1e1e25;
 
   --accent: #3b82f6;        /* primary blue */
   --accent-2: #38bdf8;      /* sky / cyan blue */
@@ -64,10 +64,46 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* big light-weight display numerals (Box Box style) */
+.display {
+  font-family: var(--font-app-num), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
 .card {
-  background: #000000;
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 1.1rem;
+  border-radius: 1.5rem;
+}
+
+/* subtle stat row that reads like the Box Box white cards */
+.stat-row {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+}
+
+/* colored rounded-square icon chip */
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* floating pill bottom nav */
+.nav-pill {
+  background: rgba(14, 14, 18, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
 .speed-tab {
@@ -81,10 +117,10 @@ body {
     );
 }
 
-/* ---------- timing-tower bars (F1 lock-screen style) ---------- */
+/* ---------- slim progress bars ---------- */
 .tower-bar {
   position: relative;
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
   background: var(--surface-3);
   overflow: hidden;
@@ -95,18 +131,7 @@ body {
   border-radius: 999px;
   transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.tower-ticks {
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.35) 0px,
-    rgba(0, 0, 0, 0.35) 1px,
-    transparent 1px,
-    transparent 9px
-  );
-  pointer-events: none;
-}
+.tower-ticks { display: none; }
 
 /* ---------- animations ---------- */
 @keyframes pulse-dot {
@@ -116,21 +141,10 @@ body {
 .live-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
 
 @keyframes rise-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.rise-in { animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-
-@keyframes drift {
-  0% { transform: translate(0, 0); }
-  50% { transform: translate(14px, -10px); }
-  100% { transform: translate(0, 0); }
-}
-
-@keyframes sway {
-  0%, 100% { transform: rotate(-1.5deg); }
-  50% { transform: rotate(1.5deg); }
-}
+.rise-in { animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 @keyframes float-leaf {
   0% { transform: translateY(-8vh) translateX(0) rotate(0deg); opacity: 0; }
@@ -143,3 +157,4 @@ body {
   html { scroll-behavior: auto; }
   .rise-in, .live-dot { animation: none; }
 }
+

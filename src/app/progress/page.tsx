@@ -74,7 +74,7 @@ function Progress() {
   const weightSeries = weights.slice(-30);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ETA hero */}
       <div className="card relative overflow-hidden p-5">
         <div className="speed-tab absolute inset-0 opacity-30" />
