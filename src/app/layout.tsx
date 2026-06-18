@@ -16,9 +16,9 @@ const appNum = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "MyHealth · Box Box",
+  title: "MyHealth — Wellness Tracker",
   description:
-    "Mobile-first health & fitness tracker — sugar, steps, calories and a live weight-goal projection. Calm forest-paddock style.",
+    "Mobile-first health & fitness tracker — sugar, steps, calories and a live weight-goal projection.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

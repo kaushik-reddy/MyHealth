@@ -100,7 +100,7 @@ export default function OnboardingPage() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Driver name"
+                placeholder="Your name"
                 className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm outline-none focus:border-accent"
               />
             </label>
@@ -221,7 +221,7 @@ export default function OnboardingPage() {
             />
             <Summary label="Protein target" value={`${Math.round(weight * 1.6)} g`} />
             <p className="pt-2 text-xs text-muted">
-              You can fine-tune all targets later in the Garage.
+              You can fine-tune all targets later in your Profile.
             </p>
           </div>
         )}
@@ -249,7 +249,7 @@ export default function OnboardingPage() {
             disabled={busy}
             className="flex-1 rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
           >
-            {busy ? "Saving…" : "Start racing"}
+            {busy ? "Saving…" : "Start tracking"}
           </button>
         )}
       </div>

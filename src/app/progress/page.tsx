@@ -22,7 +22,7 @@ import {
 
 export default function ProgressPage() {
   return (
-    <AppShell title="Progress" subtitle="Telemetry & race strategy">
+    <AppShell title="Progress" subtitle="Trends & goal plan">
       <Progress />
     </AppShell>
   );
@@ -80,7 +80,7 @@ function Progress() {
         <div className="speed-tab absolute inset-0 opacity-30" />
         <div className="relative">
           <p className="text-[11px] uppercase tracking-widest text-muted">
-            Estimated finish line
+            Estimated goal date
           </p>
           {reachDate ? (
             <>
@@ -99,7 +99,7 @@ function Progress() {
             <p className="text-sm text-muted">
               {dailyDeficit <= 0 && profile.goal_type === "lose"
                 ? "You're in a surplus — log fewer calories or move more to start the countdown."
-                : "Log a few days of meals to project your finish line."}
+                : "Log a few days of meals to project your goal date."}
             </p>
           )}
         </div>

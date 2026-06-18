@@ -1,9 +1,9 @@
-# 🏁 MyHealth — Box Box
+# � MyHealth — Wellness Tracker
 
-A **mobile-first** health & fitness tracker styled after the **Box Box F1** app — dark
-telemetry UI, timing-screen numerals, and racing accents. Track sugar, steps,
-calories and water, log your meals, flag the foods that spike your sugar, and watch a
-live **projection chart** estimate the date you'll hit your goal weight.
+A **mobile-first** health & fitness tracker with a calm, dark UI, clean numerals and a
+live **projection chart**. Track sugar, steps,
+calories and water, log your meals, flag the foods that spike your sugar, and watch the
+chart estimate the date you'll hit your goal weight.
 
 Built with **Next.js 16 (App Router) + TypeScript + Tailwind v4**, **Supabase**
 (auth + Postgres) and **Recharts**, deployed on **Vercel**.
@@ -15,18 +15,18 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind v4**, **Supabase**
 
 ## ✨ Features
 
-- **F1 "paddock" dashboard** — energy-balance hero, Apple-style activity rings
+- **Today dashboard** — energy-balance hero, daily progress bars
   (intake / steps / sugar / water), BMI, streak and distance.
 - **Daily check-in** — steps → auto distance + walking calories, hydration quick-add,
   food diary (calories / sugar / protein per meal), weigh-in, mood & notes.
 - **Sugar tracker & avoid list** — log recurring sugary items, see "frequent offenders",
   and move repeat culprits to a 🚫 **avoid list** so you skip them next time.
 - **Weight-goal projection** — Mifflin-St Jeor BMR → TDEE, calorie deficit math
-  (7700 kcal/kg) draws an estimated **finish-line date** and a projected vs. actual
+  (7700 kcal/kg) draws an estimated **goal date** and a projected vs. actual
   weight chart.
 - **Onboarding wizard** — sex, age, height, weight, goal, activity level → recommended
   calorie / protein targets.
-- **Garage (profile)** — tune every daily target, activity, and pace.
+- **Profile** — tune every daily target, activity, and pace.
 - **PWA** — installable, standalone, mobile-optimized.
 
 ---
@@ -130,11 +130,11 @@ vercel --prod          # production deploy
 ```
 src/
   app/
-    page.tsx          # Paddock dashboard
+    page.tsx          # Today dashboard
     checkin/          # Daily check-in (steps, water, food, weigh-in)
     sugar/            # Sugar tracker + avoid list
     progress/         # Projection chart + weigh-in history
-    profile/          # Garage — targets & setup
+    profile/          # Profile — targets & setup
     onboarding/       # First-run wizard
     login/            # Supabase auth (or demo entry)
   components/         # Ring, BottomNav, TopBar, AppShell, Inputs
@@ -157,8 +157,8 @@ weight change/day  = deficit ÷ 7700 kcal/kg
 ```
 
 The chart iterates this day-by-day (recomputing TDEE as weight changes) until your goal
-weight is reached, giving an estimated finish-line date.
+weight is reached, giving an estimated goal date.
 
 ---
 
-Built for fun & fitness. Lights out and away we go. 🏎️
+Built for fun & fitness. Here's to a healthier you. 🌿

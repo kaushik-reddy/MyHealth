@@ -35,7 +35,7 @@ export default function AppShell({
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-accent" />
           <span className="text-xs uppercase tracking-widest text-muted">
-            Warming up tyres…
+            Getting things ready…
           </span>
         </div>
       </div>

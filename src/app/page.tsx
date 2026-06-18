@@ -14,7 +14,7 @@ import {
 
 export default function DashboardPage() {
   return (
-    <AppShell title="Paddock" subtitle={new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}>
+    <AppShell title="Today" subtitle={new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}>
       <Dashboard />
     </AppShell>
   );
@@ -121,7 +121,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-4">
-      {/* Lock-screen style live "race progress" notification */}
+      {/* Lock-screen style live "daily progress" notification */}
       <div className="card rise-in overflow-hidden p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -129,7 +129,7 @@ function Dashboard() {
               <span className="mono text-sm font-extrabold text-white">MH</span>
             </div>
             <div className="leading-tight">
-              <p className="text-xs font-bold">Race progress</p>
+              <p className="text-xs font-bold">Daily progress</p>
               <p className="text-[10px] text-muted">MyHealth · now</p>
             </div>
           </div>
@@ -180,7 +180,7 @@ function Dashboard() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-muted">
-              Race to goal
+              Journey to goal
             </p>
             <p className="mono text-2xl font-extrabold">
               {Math.abs(toGo).toFixed(1)}
@@ -193,12 +193,12 @@ function Dashboard() {
               </p>
             ) : (
               <p className="text-xs text-muted">
-                Log meals to forecast your finish line
+                Log meals to forecast your goal date
               </p>
             )}
           </div>
           <div className="text-right">
-            <span className="text-2xl">🏁</span>
+            <span className="text-2xl">�</span>
             <p className="mt-1 text-[10px] uppercase tracking-wide text-muted">
               View chart →
             </p>

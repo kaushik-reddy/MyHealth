@@ -54,7 +54,7 @@ export default function LoginPage() {
         </div>
         <h1 className="text-2xl font-black uppercase tracking-tight">MyHealth</h1>
         <p className="mt-1 text-sm text-muted">
-          Box Box — your personal performance engineer
+          Your personal wellness companion
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export default function LoginPage() {
               value={name}
               onChange={setName}
               type="text"
-              placeholder="Max Verstappen"
+              placeholder="Alex Carter"
             />
           )}
           <Field
@@ -108,7 +108,7 @@ export default function LoginPage() {
             disabled={busy}
             className="w-full rounded-lg bg-accent py-3 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
           >
-            {busy ? "Lights out…" : mode === "signin" ? "Go racing" : "Create account"}
+            {busy ? "Signing in…" : mode === "signin" ? "Sign in" : "Create account"}
           </button>
         </form>
       ) : (

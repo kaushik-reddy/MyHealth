@@ -2,7 +2,7 @@
 
 import { useStore } from "@/lib/store";
 
-/** Thin "telemetry" strip shown at the top of the app, F1-style. */
+/** Thin status strip shown at the top of the app. */
 export default function TopBar({ title, subtitle }: { title: string; subtitle?: string }) {
   const { demoMode } = useStore();
   return (

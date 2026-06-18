@@ -17,13 +17,13 @@ import type { ActivityLevel, GoalType, Profile } from "@/lib/types";
 
 export default function ProfilePage() {
   return (
-    <AppShell title="Garage" subtitle="Tune your setup">
-      <Garage />
+    <AppShell title="Profile" subtitle="Tune your plan">
+      <ProfileEditor />
     </AppShell>
   );
 }
 
-function Garage() {
+function ProfileEditor() {
   const { profile, saveProfile, signOut, demoMode, user } = useStore();
   const router = useRouter();
   const [p, setP] = useState<Profile | null>(profile);
@@ -68,7 +68,7 @@ function Garage() {
       <div className="card p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-bold">{p.full_name || "Driver"}</p>
+            <p className="text-lg font-bold">{p.full_name || "You"}</p>
             <p className="text-xs text-muted">
               {demoMode ? "Demo mode · this device" : user?.email}
             </p>
@@ -213,7 +213,7 @@ function Garage() {
       </button>
 
       <p className="pb-2 text-center text-[10px] text-muted">
-        MyHealth · Box Box theme · built for mobile
+        MyHealth · your wellness companion · built for mobile
       </p>
     </div>
   );

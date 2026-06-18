@@ -9,7 +9,7 @@ import { uid } from "@/lib/repo";
 
 export default function SugarPage() {
   return (
-    <AppShell title="Sugar" subtitle="Spot the culprits, then box them">
+    <AppShell title="Sugar" subtitle="Spot the culprits, then cut them out">
       <Sugar />
     </AppShell>
   );

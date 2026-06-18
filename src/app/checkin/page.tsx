@@ -18,7 +18,7 @@ const SOURCE_META: Record<FoodSource, { label: string; tint: string }> = {
 
 export default function CheckinPage() {
   return (
-    <AppShell title="Check-in" subtitle="Log today's telemetry">
+    <AppShell title="Check-in" subtitle="Log today's stats">
       <Checkin />
     </AppShell>
   );
