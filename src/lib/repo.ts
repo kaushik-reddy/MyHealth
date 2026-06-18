@@ -35,6 +35,9 @@ export interface Repo {
   getMoods(): Promise<MoodEntry[]>;
   addMood(entry: MoodEntry): Promise<MoodEntry>;
   deleteMood(id: string): Promise<void>;
+
+  /** Delete all user data except the profile (logs, foods, library, sugar, weights, moods). */
+  clearAllData(): Promise<void>;
 }
 
 export function emptyLog(date: string): DailyLog {

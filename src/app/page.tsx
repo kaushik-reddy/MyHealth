@@ -7,6 +7,7 @@ import { useStore } from "@/lib/store";
 import {
   bmi,
   bmiCategory,
+  dateKey,
   formatReachDate,
   projectWeight,
   tdee,
@@ -60,7 +61,7 @@ function Dashboard() {
     );
     let s = 0;
     const d = new Date();
-    while (set.has(d.toISOString().slice(0, 10))) {
+    while (set.has(dateKey(d))) {
       s++;
       d.setDate(d.getDate() - 1);
     }
@@ -119,7 +120,7 @@ function Dashboard() {
     for (let i = 13; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+      const key = dateKey(d);
       const log = byDate.get(key);
       out.push({
         date: key,
@@ -404,17 +405,12 @@ interface GoalRow {
 /* ---------- Live tracker widget (iOS live-activity / lock-screen style) ---------- */
 function LiveTracker({ goals }: { goals: GoalRow[] }) {
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-border bg-surface-2">
+    <div className="card overflow-hidden">
       {/* header */}
       <div className="flex items-center justify-between px-5 pt-4">
-        <div className="flex items-center gap-2.5">
-          <span className="chip h-8 w-8 rounded-xl bg-accent text-sm font-extrabold text-white">
-            MH
-          </span>
-          <div className="leading-tight">
-            <p className="text-sm font-bold">Today&apos;s tracker</p>
-            <p className="text-[10px] text-muted">MyHealth · live</p>
-          </div>
+        <div className="leading-tight">
+          <p className="text-sm font-bold">Today&apos;s tracker</p>
+          <p className="text-[10px] text-muted">MyHealth · live</p>
         </div>
         <span className="flex items-center gap-1.5 rounded-full bg-surface-3 px-2.5 py-1">
           <span className="live-dot h-1.5 w-1.5 rounded-full bg-accent" />
@@ -457,20 +453,24 @@ function LiveTracker({ goals }: { goals: GoalRow[] }) {
 
 /* dotted / segmented progress bar (Box Box style) */
 function SegmentBar({ pct, color }: { pct: number; color: string }) {
-  const SEGMENTS = 18;
+  const SEGMENTS = 16;
   const filled = Math.round(Math.min(Math.max(pct, 0), 1) * SEGMENTS);
   return (
-    <div className="flex items-center gap-[3px]">
-      {Array.from({ length: SEGMENTS }).map((_, i) => (
-        <span
-          key={i}
-          className="h-2 flex-1 rounded-full transition-colors"
-          style={{
-            background: i < filled ? color : "var(--surface-3)",
-            opacity: i < filled ? 1 : 0.7,
-          }}
-        />
-      ))}
+    <div className="flex items-center gap-[2px]">
+      {Array.from({ length: SEGMENTS }).map((_, i) => {
+        const on = i < filled;
+        return (
+          <span
+            key={i}
+            className="h-3.5 w-1.5 rounded-full transition-all"
+            style={{
+              background: on ? color : "var(--surface-3)",
+              opacity: on ? 1 : 0.6,
+              boxShadow: on ? `0 0 6px ${color}` : "none",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }

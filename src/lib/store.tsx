@@ -24,7 +24,7 @@ import { LocalRepo } from "@/lib/repo-local";
 import { SupabaseRepo } from "@/lib/repo-supabase";
 import { HybridRepo } from "@/lib/repo-hybrid";
 import { emptyLog, type Repo, uid } from "@/lib/repo";
-import { todayKey } from "@/lib/health";
+import { dateKey, todayKey } from "@/lib/health";
 
 interface StoreState {
   ready: boolean;
@@ -65,6 +65,8 @@ interface StoreState {
   addWeight: (kg: number) => Promise<void>;
   addMood: (mood: MoodEntry["mood"], note: string | null) => Promise<void>;
   deleteMood: (id: string) => Promise<void>;
+  /** Delete all logged data, keeping the profile & account. */
+  clearAllData: () => Promise<void>;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -101,7 +103,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const day = selectedRef.current;
     const since = new Date();
     since.setDate(since.getDate() - 30);
-    const sinceKey = since.toISOString().slice(0, 10);
+    const sinceKey = dateKey(since);
     const [p, lg, fd, rf, lib, sg, wt, md] = await Promise.all([
       repo.getProfile(),
       repo.getLogs(),
@@ -343,6 +345,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setMoods((prev) => prev.filter((m) => m.id !== id));
   }, []);
 
+  const clearAllData = useCallback(async () => {
+    await repoRef.current.clearAllData();
+    setLogs([]);
+    setFoodsToday([]);
+    setRecentFoods([]);
+    setFoodLibrary([]);
+    setSugarItems([]);
+    setWeights([]);
+    setMoods([]);
+  }, []);
+
   const signOut = useCallback(async () => {
     if (supabaseConfigured) {
       const sb = createClient();
@@ -381,6 +394,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addWeight,
     addMood,
     deleteMood,
+    clearAllData,
     refresh: loadAll,
     signOut,
   };

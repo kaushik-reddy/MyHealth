@@ -48,7 +48,7 @@ export default function AppShell({
     <div className="mx-auto flex min-h-dvh max-w-md flex-col">
       <Background />
       <TopBar title={title} subtitle={subtitle} />
-      <main className="flex-1 px-5 pb-28 pt-5">{children}</main>
+      <main className="px-5 pb-4 pt-5">{children}</main>
       <BottomNav />
     </div>
   );

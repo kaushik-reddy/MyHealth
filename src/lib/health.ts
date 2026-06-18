@@ -120,7 +120,7 @@ export function projectWeight(
     const d = new Date(today);
     d.setDate(d.getDate() + day);
     points.push({
-      date: d.toISOString().slice(0, 10),
+      date: dateKey(d),
       weight: Math.round(weight * 10) / 10,
       target: profile.goal_weight_kg,
     });
@@ -150,4 +150,20 @@ export function formatReachDate(reachDays: number | null) {
   return d;
 }
 
-export const todayKey = () => new Date().toISOString().slice(0, 10);
+/** Format a Date as a local YYYY-MM-DD key (timezone-safe, never shifts day). */
+export function dateKey(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+export const todayKey = () => dateKey(new Date());
+
+/** Add (or subtract) days to a YYYY-MM-DD key without timezone drift. */
+export function shiftKey(key: string, days: number) {
+  const [y, m, d] = key.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + days);
+  return dateKey(dt);
+}

@@ -228,4 +228,13 @@ export class HybridRepo implements Repo {
       /* ignore */
     }
   }
+
+  async clearAllData() {
+    await this.cache.clearAllData();
+    try {
+      await this.primary.clearAllData();
+    } catch {
+      /* ignore */
+    }
+  }
 }

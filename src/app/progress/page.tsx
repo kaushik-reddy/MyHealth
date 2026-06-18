@@ -18,6 +18,7 @@ import {
 import AppShell from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import {
+  dateKey,
   formatReachDate,
   projectWeight,
   tdee,
@@ -90,7 +91,7 @@ function Progress() {
     for (let i = 13; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+      const key = dateKey(d);
       const log = byDate.get(key);
       out.push({
         label: d.toLocaleDateString(undefined, { day: "numeric" }),
@@ -149,21 +150,34 @@ function Progress() {
       <ChartCard title="Calories — last 14 days" hint={`target ${profile.daily_calorie_target} kcal`}>
         <ResponsiveContainer width="100%" height={170}>
           <BarChart data={last14} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
-            <CartesianGrid stroke="#1e1e25" strokeDasharray="3 3" vertical={false} />
+            <defs>
+              <linearGradient id="barBlue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#60a5fa" />
+                <stop offset="100%" stopColor="#2563eb" />
+              </linearGradient>
+              <linearGradient id="barRed" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fb7185" />
+                <stop offset="100%" stopColor="#e11d48" />
+              </linearGradient>
+              <filter id="glowBlue" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.7" />
+              </filter>
+            </defs>
+            <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
             <XAxis dataKey="label" tick={{ fill: "#8a8f9e", fontSize: 10 }} tickLine={false} axisLine={false} interval={1} />
             <YAxis tick={{ fill: "#8a8f9e", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
             <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} contentStyle={TOOLTIP} labelStyle={{ color: "#8a8f9e" }} />
-            <ReferenceLine y={profile.daily_calorie_target} stroke="#facc15" strokeDasharray="4 4" />
-            <Bar dataKey="calories" radius={[5, 5, 0, 0]}>
+            <ReferenceLine y={profile.daily_calorie_target} stroke="#facc15" strokeDasharray="4 4" strokeOpacity={0.7} />
+            <Bar dataKey="calories" radius={[6, 6, 2, 2]} style={{ filter: "url(#glowBlue)" }}>
               {last14.map((d, i) => (
                 <Cell
                   key={i}
                   fill={
                     d.calories === 0
-                      ? "#1a1a20"
+                      ? "#15151b"
                       : d.calories <= profile.daily_calorie_target
-                        ? "#3b82f6"
-                        : "#f87171"
+                        ? "url(#barBlue)"
+                        : "url(#barRed)"
                   }
                 />
               ))}
@@ -178,16 +192,27 @@ function Progress() {
           <AreaChart data={last14} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
             <defs>
               <linearGradient id="sugar" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#a5b4fc" stopOpacity={0.4} />
+                <stop offset="0%" stopColor="#c4b5fd" stopOpacity={0.55} />
                 <stop offset="100%" stopColor="#a5b4fc" stopOpacity={0} />
               </linearGradient>
+              <filter id="glowPurple" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#a5b4fc" floodOpacity="0.8" />
+              </filter>
             </defs>
-            <CartesianGrid stroke="#1e1e25" strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
             <XAxis dataKey="label" tick={{ fill: "#8a8f9e", fontSize: 10 }} tickLine={false} axisLine={false} interval={1} />
             <YAxis tick={{ fill: "#8a8f9e", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
             <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} contentStyle={TOOLTIP} labelStyle={{ color: "#8a8f9e" }} />
-            <ReferenceLine y={profile.daily_sugar_limit_g} stroke="#f87171" strokeDasharray="4 4" />
-            <Area type="monotone" dataKey="sugar" stroke="#a5b4fc" strokeWidth={2} fill="url(#sugar)" />
+            <ReferenceLine y={profile.daily_sugar_limit_g} stroke="#f87171" strokeDasharray="4 4" strokeOpacity={0.7} />
+            <Area
+              type="monotone"
+              dataKey="sugar"
+              stroke="#c4b5fd"
+              strokeWidth={2.5}
+              fill="url(#sugar)"
+              style={{ filter: "url(#glowPurple)" }}
+              dot={{ r: 2.5, fill: "#c4b5fd", strokeWidth: 0 }}
+            />
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -196,14 +221,23 @@ function Progress() {
       <ChartCard title="Steps — last 14 days" hint={`goal ${profile.daily_step_goal.toLocaleString()}`}>
         <ResponsiveContainer width="100%" height={150}>
           <BarChart data={last14} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
-            <CartesianGrid stroke="#1e1e25" strokeDasharray="3 3" vertical={false} />
+            <defs>
+              <linearGradient id="barCyan" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#67e8f9" />
+                <stop offset="100%" stopColor="#0891b2" />
+              </linearGradient>
+              <filter id="glowCyan" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#38bdf8" floodOpacity="0.7" />
+              </filter>
+            </defs>
+            <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
             <XAxis dataKey="label" tick={{ fill: "#8a8f9e", fontSize: 10 }} tickLine={false} axisLine={false} interval={1} />
             <YAxis tick={{ fill: "#8a8f9e", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
             <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} contentStyle={TOOLTIP} labelStyle={{ color: "#8a8f9e" }} />
-            <ReferenceLine y={profile.daily_step_goal} stroke="#facc15" strokeDasharray="4 4" />
-            <Bar dataKey="steps" radius={[5, 5, 0, 0]}>
+            <ReferenceLine y={profile.daily_step_goal} stroke="#facc15" strokeDasharray="4 4" strokeOpacity={0.7} />
+            <Bar dataKey="steps" radius={[6, 6, 2, 2]} style={{ filter: "url(#glowCyan)" }}>
               {last14.map((d, i) => (
-                <Cell key={i} fill={d.steps === 0 ? "#1a1a20" : "#38bdf8"} />
+                <Cell key={i} fill={d.steps === 0 ? "#15151b" : "url(#barCyan)"} />
               ))}
             </Bar>
           </BarChart>
@@ -225,6 +259,7 @@ function Progress() {
                     style={{
                       width: `${moodTotal ? (m.value / moodTotal) * 100 : 0}%`,
                       background: m.color,
+                      boxShadow: `0 0 10px ${m.color}`,
                     }}
                   />
                 </div>
@@ -241,11 +276,14 @@ function Progress() {
           <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="proj" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.35} />
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
                 <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
               </linearGradient>
+              <filter id="glowLine" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.8" />
+              </filter>
             </defs>
-            <CartesianGrid stroke="#1e1e25" strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid stroke="#16161c" strokeDasharray="2 4" vertical={false} />
             <XAxis
               dataKey="label"
               tick={{ fill: "#8a8f9e", fontSize: 10 }}
@@ -268,22 +306,24 @@ function Progress() {
               y={profile.goal_weight_kg}
               stroke="#f87171"
               strokeDasharray="4 4"
+              strokeOpacity={0.7}
               label={{ value: "Goal", fill: "#f87171", fontSize: 10, position: "insideTopRight" }}
             />
             <Area
               type="monotone"
               dataKey="projected"
               stroke="#3b82f6"
-              strokeWidth={2}
+              strokeWidth={2.5}
               fill="url(#proj)"
+              style={{ filter: "url(#glowLine)" }}
               name="Projected"
             />
             <Line
               type="monotone"
               dataKey="actual"
               stroke="#38bdf8"
-              strokeWidth={2}
-              dot={{ r: 3, fill: "#38bdf8" }}
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: "#38bdf8", strokeWidth: 0 }}
               connectNulls
               name="Actual"
             />

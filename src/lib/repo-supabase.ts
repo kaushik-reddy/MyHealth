@@ -182,4 +182,16 @@ export class SupabaseRepo implements Repo {
   async deleteMood(id: string) {
     await this.sb.from("mood_entries").delete().eq("id", id);
   }
+
+  async clearAllData() {
+    // Delete every row owned by this user, keeping their profile intact.
+    await Promise.all([
+      this.sb.from("daily_logs").delete().eq("user_id", this.userId),
+      this.sb.from("food_entries").delete().eq("user_id", this.userId),
+      this.sb.from("food_library").delete().eq("user_id", this.userId),
+      this.sb.from("sugar_items").delete().eq("user_id", this.userId),
+      this.sb.from("weight_entries").delete().eq("user_id", this.userId),
+      this.sb.from("mood_entries").delete().eq("user_id", this.userId),
+    ]);
+  }
 }

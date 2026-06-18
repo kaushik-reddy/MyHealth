@@ -26,10 +26,13 @@ export default function ProfilePage() {
 }
 
 function ProfileEditor() {
-  const { profile, saveProfile, signOut, demoMode, user } = useStore();
+  const { profile, saveProfile, signOut, clearAllData, demoMode, user } = useStore();
   const router = useRouter();
   const [p, setP] = useState<Profile | null>(profile);
   const [saved, setSaved] = useState(false);
+  const [confirmWipe, setConfirmWipe] = useState(false);
+  const [wiping, setWiping] = useState(false);
+  const [wiped, setWiped] = useState(false);
 
   if (!p) return null;
 
@@ -73,6 +76,18 @@ function ProfileEditor() {
   async function handleSignOut() {
     await signOut();
     router.replace("/login");
+  }
+
+  async function handleWipe() {
+    setWiping(true);
+    try {
+      await clearAllData();
+      setConfirmWipe(false);
+      setWiped(true);
+      setTimeout(() => setWiped(false), 1600);
+    } finally {
+      setWiping(false);
+    }
   }
 
   return (
@@ -264,6 +279,46 @@ function ProfileEditor() {
       >
         Save changes
       </button>
+
+      {/* danger zone */}
+      <div className="rounded-2xl border border-[#f8717133] bg-[#f871710d] p-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#f87171]">
+          Danger zone
+        </p>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted">
+          Permanently erase all your logged data — check-ins, foods, sugar,
+          weigh-ins and moods. Your profile and account stay.
+        </p>
+        {wiped ? (
+          <div className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-green/40 bg-green/10 px-3 py-2.5 text-center text-xs font-semibold text-green">
+            <CheckIcon size={14} /> All data removed
+          </div>
+        ) : confirmWipe ? (
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => setConfirmWipe(false)}
+              disabled={wiping}
+              className="flex-1 rounded-full bg-surface-2 py-3 text-xs font-bold uppercase tracking-wider text-muted transition active:scale-[0.98] disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleWipe}
+              disabled={wiping}
+              className="flex-1 rounded-full bg-[#f87171] py-3 text-xs font-bold uppercase tracking-wider text-[#0a0a0c] transition active:scale-[0.98] disabled:opacity-60"
+            >
+              {wiping ? "Removing…" : "Yes, delete"}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmWipe(true)}
+            className="mt-3 w-full rounded-full border border-[#f8717155] py-3 text-xs font-bold uppercase tracking-wider text-[#f87171] transition active:scale-[0.98]"
+          >
+            Remove all my data
+          </button>
+        )}
+      </div>
 
       <button
         onClick={handleSignOut}

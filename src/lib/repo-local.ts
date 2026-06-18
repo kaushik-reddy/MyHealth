@@ -157,4 +157,14 @@ export class LocalRepo implements Repo {
       all.filter((m) => m.id !== id)
     );
   }
+
+  async clearAllData() {
+    // Wipe everything except the profile.
+    write(KEYS.logs, []);
+    write(KEYS.foods, []);
+    write(KEYS.library, []);
+    write(KEYS.sugar, []);
+    write(KEYS.weights, []);
+    write(KEYS.moods, []);
+  }
 }

@@ -6,7 +6,7 @@ import AppShell from "@/components/AppShell";
 import Collapsible from "@/components/Collapsible";
 import { NumberField, Segmented, Stepper, TextField } from "@/components/Inputs";
 import { useStore } from "@/lib/store";
-import { stepsToKm, walkingCalories, todayKey } from "@/lib/health";
+import { stepsToKm, walkingCalories, todayKey, shiftKey, dateKey } from "@/lib/health";
 import { DEFAULT_FOODS } from "@/lib/foods";
 import type { FoodEntry, FoodLibraryItem, FoodSource, MoodEntry } from "@/lib/types";
 import {
@@ -212,14 +212,13 @@ function DayNav({
 }) {
   const today = todayKey();
   const isToday = date >= today;
-  const d = new Date(date + "T00:00:00");
+  // Build a local Date purely for display (no UTC conversion for math).
+  const [y, m, dd] = date.split("-").map(Number);
+  const d = new Date(y, m - 1, dd);
 
-  const shift = (days: number) => {
-    const nd = new Date(d);
-    nd.setDate(nd.getDate() + days);
-    const key = nd.toISOString().slice(0, 10);
-    // never allow navigating into the future
-    if (key > today) return;
+  const go = (days: number) => {
+    const key = shiftKey(date, days);
+    if (key > today) return; // never go into the future
     onChange(key);
   };
 
@@ -232,17 +231,17 @@ function DayNav({
       });
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-2 p-2.5">
+    <div className="flex items-center justify-between gap-2 rounded-2xl border border-white/[0.07] bg-surface-2 p-2.5">
       <button
-        onClick={() => shift(-1)}
-        className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-3 text-muted transition active:scale-90"
+        onClick={() => go(-1)}
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-3 text-muted transition active:scale-90"
         aria-label="Previous day"
       >
         <ChevronLeft size={20} />
       </button>
-      <div className="text-center">
+      <div className="min-w-0 text-center">
         <p className="text-base font-bold">{label}</p>
-        <p className="text-[11px] text-muted">
+        <p className="truncate text-[11px] text-muted">
           {d.toLocaleDateString(undefined, {
             weekday: "long",
             year: "numeric",
@@ -251,14 +250,33 @@ function DayNav({
           })}
         </p>
       </div>
-      <button
-        onClick={() => shift(1)}
-        disabled={isToday}
-        className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-3 text-muted transition active:scale-90 disabled:opacity-25"
-        aria-label="Next day"
-      >
-        <ChevronRight size={20} />
-      </button>
+      {isToday ? (
+        <button
+          onClick={() => go(1)}
+          disabled
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-3 text-muted opacity-25"
+          aria-label="Next day"
+        >
+          <ChevronRight size={20} />
+        </button>
+      ) : (
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={() => onChange(today)}
+            className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-[#0a0a0c] transition active:scale-90"
+            style={{ background: "var(--motiv)" }}
+          >
+            Today
+          </button>
+          <button
+            onClick={() => go(1)}
+            className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-3 text-muted transition active:scale-90"
+            aria-label="Next day"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -916,14 +934,14 @@ function currentMeal(): FoodEntry["meal_type"] {
 
 function SpendSection() {
   const { recentFoods } = useStore();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKey();
 
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 6);
-  const weekKey = weekAgo.toISOString().slice(0, 10);
+  const weekKey = dateKey(weekAgo);
   const monthAgo = new Date();
   monthAgo.setDate(monthAgo.getDate() - 29);
-  const monthKey = monthAgo.toISOString().slice(0, 10);
+  const monthKey = dateKey(monthAgo);
 
   const outside = recentFoods.filter(
     (f) => f.cost && f.cost > 0 && f.source && f.source !== "home"
